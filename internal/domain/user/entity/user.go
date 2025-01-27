@@ -21,7 +21,7 @@ type User struct {
 	FirstName    string    `gorm:"type:varchar(255);not null" json:"first_name" validate:"required,min=3,max=20"`
 	LastName     string    `gorm:"type:varchar(255);not null" json:"last_name" validate:"required,min=3,max=20"`
 	Email        string    `gorm:"type:varchar(100);not null;unique" json:"email" validate:"required,email"`
-	Phone        string    `gorm:"type:varchar(20)" json:"phone:unique" validate:"omitempty,e164"`
+	Phone        string    `gorm:"type:varchar(20):not null;unique" json:"phone" validate:"required,e164"`
 	PasswordHash string    `gorm:"type:varchar(100);not null" json:"password" validate:"required,min=8,passwd"`
 	Role         Role      `gorm:"type:varchar(10);not null" json:"role" validate:"oneof=GUEST STAFF MANAGER ADMIN OWNER"`
 	IsActive     bool      `gorm:"default:true" json:"is_active"`
