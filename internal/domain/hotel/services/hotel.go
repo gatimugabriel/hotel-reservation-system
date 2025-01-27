@@ -29,6 +29,10 @@ func NewHotelService(hotelRepo repository.HotelRepository) *HotelServiceImpl {
 }
 
 func (h *HotelServiceImpl) CreateHotel(ctx context.Context, hotel *entity.Hotel) (*entity.Hotel, error) {
+	//get manager id from context
+	ownerID := ctx.Value("userID").(string)
+	hotel.OwnerID, _ = uuid.Parse(ownerID)
+
 	if err := h.hotelRepo.Create(ctx, hotel); err != nil {
 		return nil, fmt.Errorf("failed to create hotel: %w", err)
 	}
