@@ -45,7 +45,7 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		req.Role = constants.GUEST
 	}
 
-	if validationErrors := input.Validate(&req); validationErrors != nil {
+	if validationErrors := input.ValidateStruct(&req); validationErrors != nil {
 		utils.RespondJSON(w, http.StatusBadRequest, validationErrors)
 		return
 	}

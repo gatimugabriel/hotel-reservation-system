@@ -21,7 +21,7 @@ func RegisterHotelRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 
 	r.Handle("POST /create-hotel",
 		middleware.Authenticate(
-			middleware.RoleCheck([]constants.Role{constants.ADMIN, constants.HOTELOWNER},
+			middleware.RoleCheck([]constants.Role{constants.PROPERTYOWNER},
 				http.HandlerFunc(handler.CreateHotel)),
 		),
 	)

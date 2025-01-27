@@ -5,6 +5,7 @@ import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/hotel/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/hotel/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
+	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils/input"
 	"github.com/google/uuid"
 	"net/http"
 	"strings"
@@ -25,6 +26,11 @@ func (h *HotelHandler) CreateHotel(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&hotelData); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
+	}
+
+	//Sanitize & ValidateStruct
+	if validationErrors := input.ValidateStruct(hotelData); validationErrors != nil {
+		utils.RespondJSON(w, http.StatusBadRequest, validationErrors)
 	}
 
 	createdHotel, err := h.hotelService.CreateHotel(r.Context(), &hotelData)
