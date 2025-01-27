@@ -2,6 +2,8 @@ package router
 
 import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/handlers"
+	"github.com/gatimugabriel/hotel-reservation-system/internal/api/middleware"
+	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/hotel/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/hotel/services"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/infrastructure/database"
@@ -17,8 +19,14 @@ func RegisterHotelRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	hotelService := services.NewHotelService(hotelRepo)
 	handler := handlers.NewHotelHandler(hotelService)
 
-	r.HandleFunc("POST /hotel/create", handler.CreateHotel)
-	r.HandleFunc("GET /hotel/:id", handler.GetHotel)
+	r.Handle("POST /create-hotel",
+		middleware.Authenticate(
+			middleware.RoleCheck([]constants.Role{constants.ADMIN, constants.HOTELOWNER},
+				http.HandlerFunc(handler.CreateHotel)),
+		),
+	)
+
+	r.HandleFunc("GET /:hotelID", handler.GetHotel)
 
 	return http.StripPrefix("/api/v1/hotel", r)
 }

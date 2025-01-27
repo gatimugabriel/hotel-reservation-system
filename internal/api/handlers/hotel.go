@@ -20,6 +20,22 @@ func NewHotelHandler(hotelService services.HotelService) *HotelHandler {
 	}
 }
 
+func (h *HotelHandler) CreateHotel(w http.ResponseWriter, r *http.Request) {
+	var hotelData entity.Hotel
+	if err := json.NewDecoder(r.Body).Decode(&hotelData); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	createdHotel, err := h.hotelService.CreateHotel(r.Context(), &hotelData)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to create hotel")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusCreated, createdHotel)
+}
+
 func (h *HotelHandler) GetHotels(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -49,27 +65,6 @@ func (h *HotelHandler) GetHotel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, hotel)
-}
-
-func (h *HotelHandler) CreateHotel(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	var hotelData entity.Hotel
-	if err := json.NewDecoder(r.Body).Decode(&hotelData); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	createdHotel, err := h.hotelService.CreateHotel(r.Context(), &hotelData)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to create hotel")
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusCreated, createdHotel)
 }
 
 func (h *HotelHandler) UpdateHotel(w http.ResponseWriter, r *http.Request) {

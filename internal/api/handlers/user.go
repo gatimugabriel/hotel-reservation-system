@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/config"
+	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
@@ -41,7 +42,7 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	req.Email = input.SanitizeString(req.Email)
 	req.Phone = input.SanitizeString(req.Phone)
 	if req.Role == "" {
-		req.Role = entity.RoleGuest
+		req.Role = constants.GUEST
 	}
 
 	if validationErrors := input.Validate(&req); validationErrors != nil {

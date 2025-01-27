@@ -17,8 +17,8 @@ func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	roomService := services.NewRoomService(roomRepo)
 	handler := handlers.NewRoomHandler(roomService)
 
-	r.HandleFunc("POST /room/create", handler.CreateRoom)
-	r.HandleFunc("GET /room/:id", handler.GetRoom)
+	r.HandleFunc("POST /create-room", handler.CreateRoom)
+	r.HandleFunc("GET /:roomID", handler.GetRoom)
 
 	return http.StripPrefix("/api/v1/room", r)
 }

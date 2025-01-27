@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/config"
+	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
@@ -72,7 +73,7 @@ func (u *UserServiceImpl) CreateOrGetWithGoogleOauth(ctx context.Context, token 
 		Email:      userInfo.Email,
 		FirstName:  userInfo.GivenName,
 		LastName:   userInfo.FamilyName,
-		Role:       entity.RoleGuest,
+		Role:       constants.GUEST,
 		IsActive:   true,
 		IsVerified: true,
 	}
@@ -157,7 +158,6 @@ func (u *UserServiceImpl) DeleteUser(ctx context.Context, userID string) error {
 // Helper method to get Google user info
 func (u *UserServiceImpl) getGoogleUserInfo(accessToken string) (*GoogleUserInfo, error) {
 	// Implementation to call Google OAuth2 userinfo endpoint
-	// This is a placeholder - you'll need to implement the actual HTTP call
 	return nil, nil
 }
 
