@@ -27,6 +27,7 @@ func RegisterHotelRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	)
 
 	r.HandleFunc("GET /:hotelID", handler.GetHotel)
+	r.HandleFunc("GET /all", handler.GetHotels)
 
 	return http.StripPrefix("/api/v1/hotel", r)
 }
