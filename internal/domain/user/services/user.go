@@ -39,26 +39,18 @@ func NewUserService(userRepo repository.UserRepository) *UserServiceImpl {
 }
 
 func (u *UserServiceImpl) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
-	// Hash the password
+	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 	user.PasswordHash = string(hashedPassword)
-
-	// Set default values
 	user.ID = uuid.New()
-	user.CreatedAt = time.Now()
-	user.UpdatedAt = time.Now()
-	user.IsActive = true
-
-	if user.Role == "" {
-		user.Role = entity.RoleGuest
-	}
 
 	if err := u.userRepo.Create(ctx, user); err != nil {
 		return nil, err
 	}
+
 	return user, nil
 }
 
@@ -77,12 +69,12 @@ func (u *UserServiceImpl) CreateOrGetWithGoogleOauth(ctx context.Context, token 
 
 	// Create new user
 	newUser := &entity.User{
-		Email:         userInfo.Email,
-		FirstName:     userInfo.GivenName,
-		LastName:      userInfo.FamilyName,
-		Role:          entity.RoleGuest,
-		IsActive:      true,
-		EmailVerified: true,
+		Email:      userInfo.Email,
+		FirstName:  userInfo.GivenName,
+		LastName:   userInfo.FamilyName,
+		Role:       entity.RoleGuest,
+		IsActive:   true,
+		IsVerified: true,
 	}
 
 	return u.Create(ctx, newUser)
