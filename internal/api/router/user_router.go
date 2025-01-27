@@ -8,23 +8,17 @@ import (
 	"net/http"
 )
 
-// RegisterAuthRoutes registers auth related API endpoints
+// RegisterUserProfileRoutes registers User API endpoints
 // @param db -> database service
 // @param r -> http ServeMux (router)
 // @return http.Handler
-func RegisterAuthRoutes(db *database.Service, r *http.ServeMux) http.Handler {
+func RegisterUserProfileRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	userRepo := repository.NewUserRepository(db)
 	userService := services.NewUserService(userRepo)
 	handler := handlers.NewUserHandler(userService)
 
-	r.HandleFunc("POST /signup", handler.SignUp)
-	r.HandleFunc("POST /signin", handler.Login) // TODO -> add constraints; 5 signin attempts
-	//r.HandleFunc("POST /signout", tokenHandler.SignOut)
-	//r.HandleFunc("POST /refresh", handler.RefreshToken)
-	//
-	//// Google Auth
-	//r.HandleFunc("GET /google/login", handler.GoogleLogin)
-	//r.HandleFunc("GET /google/callback", handler.GoogleCallback)
+	r.HandleFunc("PUT /update", handler.Update)
+	//r.HandleFunc("GET /all", handler.GetUsers)
 
-	return http.StripPrefix("/api/v1/auth", r)
+	return http.StripPrefix("/api/v1/user", r)
 }
