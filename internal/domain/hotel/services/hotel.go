@@ -15,7 +15,7 @@ type HotelService interface {
 	DeactivateHotel(ctx context.Context, id uuid.UUID) error
 	GetHotels(ctx context.Context) ([]*entity.Hotel, error)
 	GetHotelsByCity(ctx context.Context, city string) ([]*entity.Hotel, error)
-	GetHotel(ctx context.Context, id string) (*entity.Hotel, error)
+	GetHotel(ctx context.Context, id uuid.UUID) (*entity.Hotel, error)
 	DeleteHotel(ctx context.Context, id string) error
 }
 type HotelServiceImpl struct {
@@ -85,13 +85,8 @@ func (h *HotelServiceImpl) GetHotelsByCity(ctx context.Context, city string) ([]
 	return hotels, nil
 }
 
-func (h *HotelServiceImpl) GetHotel(ctx context.Context, id string) (*entity.Hotel, error) {
-	hotelID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid hotel ID: %w", err)
-	}
-
-	hotel, err := h.hotelRepo.GetByID(ctx, hotelID)
+func (h *HotelServiceImpl) GetHotel(ctx context.Context, id uuid.UUID) (*entity.Hotel, error) {
+	hotel, err := h.hotelRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hotel: %w", err)
 	}

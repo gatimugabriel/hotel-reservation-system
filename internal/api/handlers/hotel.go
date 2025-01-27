@@ -43,11 +43,6 @@ func (h *HotelHandler) CreateHotel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HotelHandler) GetHotels(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	hotels, err := h.hotelService.GetHotels(r.Context())
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to get hotels")
@@ -58,14 +53,16 @@ func (h *HotelHandler) GetHotels(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HotelHandler) GetHotel(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+	//idStr := strings.TrimPrefix(r.URL.Path, "/api/v1/hotel/")
+	idStr := utils.GetResourceIDFromURL(r)
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid hotel ID format")
 		return
 	}
 
-	id := strings.TrimPrefix(r.URL.Path, "/api/v1/hotels/")
 	hotel, err := h.hotelService.GetHotel(r.Context(), id)
-	if err != nil {
+	if err != nil || hotel == nil {
 		utils.RespondError(w, http.StatusNotFound, "Hotel not found")
 		return
 	}
