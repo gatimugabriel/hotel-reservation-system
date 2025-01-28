@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"os"
 	"time"
 )
@@ -10,7 +11,6 @@ var (
 	accessTokenSecret        = os.Getenv("ACCESS_TOKEN_SECRET")
 	refreshTokenSecret       = os.Getenv("REFRESH_TOKEN_SECRET")
 	passwordResetTokenSecret = os.Getenv("PASSWORD_RESET_TOKEN_SECRET")
-	generatePropTokens       = os.Getenv("PROP_TOKEN")
 )
 
 // GenerateTokens : generates access & refresh token
@@ -45,8 +45,6 @@ func ValidateToken(tokenString string, tokenType string) (map[string]interface{}
 		secret = []byte(accessTokenSecret)
 	case "PASSWORD_RESET":
 		secret = []byte(passwordResetTokenSecret)
-	case "PROPERTY":
-		secret = []byte(generatePropTokens)
 	default:
 		return nil, fmt.Errorf("invalid token type")
 	}
@@ -79,7 +77,7 @@ func ValidateToken(tokenString string, tokenType string) (map[string]interface{}
 }
 
 // GenerateToken : creates a JWT token on given input
-// accepts flexible object input & returns an encrypted string
+// accepts flexible object input & returns an encrypted string as the token's payload
 func GenerateToken(payload map[string]interface{}, tokenDuration time.Duration, secretKey string) (string, error) {
 	encryptedPayload, err := EncryptPayload(payload)
 	if err != nil {
