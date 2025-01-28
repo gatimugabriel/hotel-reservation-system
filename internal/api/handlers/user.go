@@ -2,18 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/config"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils/input"
-	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/oauth2"
 	"net/http"
-	"regexp"
 	"time"
 )
 
@@ -52,32 +48,13 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userService.Create(r.Context(), &req)
 	if err != nil {
-		errorMessage := ""
-		errorStatus := http.StatusInternalServerError
-
-		// Check for unique constraint violation
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == "23505" {
-				//  Extract column name and value for the detail message
-				re := regexp.MustCompile(`Key \(([^)]+)\)=\([^)]*\) already exists.`)
-				matches := re.FindStringSubmatch(pgErr.Detail)
-				if len(matches) == 2 {
-					columnName := matches[1]
-					errorMessage = fmt.Sprintf("%s already exists", columnName)
-					errorStatus = http.StatusConflict
-				} else {
-					errorMessage = fmt.Sprintf("%s already exists", pgErr.ConstraintName)
-					errorStatus = http.StatusConflict
-				}
-
-				utils.RespondError(w, errorStatus, errorMessage)
-				return
-			}
+		if status, message, ok := utils.HandleUniqueConstraintError(err); ok {
+			utils.RespondError(w, status, message)
+			return
 		}
 
 		// default
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to signup. Please try again later")
 		return
 	}
 

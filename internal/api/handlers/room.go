@@ -2,16 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils/input"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgconn"
 	"net/http"
-	"regexp"
 )
 
 type RoomHandler struct {
@@ -58,29 +54,9 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	createdRoom, err := h.roomService.CreateRoom(r.Context(), &roomData)
 	if err != nil {
-
-		errorMessage := ""
-		errorStatus := http.StatusInternalServerError
-
-		// Check for unique constraint violation
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == "23505" {
-				//  Extract column name and value for the detail message
-				re := regexp.MustCompile(`Key \(([^)]+)\)=\([^)]*\) already exists.`)
-				matches := re.FindStringSubmatch(pgErr.Detail)
-				if len(matches) == 2 {
-					columnName := matches[1]
-					errorMessage = fmt.Sprintf("%s already exists", columnName)
-					errorStatus = http.StatusConflict
-				} else {
-					errorMessage = fmt.Sprintf("%s already exists", pgErr.ConstraintName)
-					errorStatus = http.StatusConflict
-				}
-
-				utils.RespondError(w, errorStatus, errorMessage)
-				return
-			}
+		if status, message, ok := utils.HandleUniqueConstraintError(err); ok {
+			utils.RespondError(w, status, message)
+			return
 		}
 
 		// default
@@ -148,28 +124,9 @@ func (h *RoomHandler) CreateRoomType(w http.ResponseWriter, r *http.Request) {
 
 	createdRoomType, err := h.roomTypeService.CreateRoomType(r.Context(), &roomData)
 	if err != nil {
-		errorMessage := ""
-		errorStatus := http.StatusInternalServerError
-
-		// Check for unique constraint violation
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == "23505" {
-				//  Extract column name and value for the detail message
-				re := regexp.MustCompile(`Key \(([^)]+)\)=\([^)]*\) already exists.`)
-				matches := re.FindStringSubmatch(pgErr.Detail)
-				if len(matches) == 2 {
-					columnName := matches[1]
-					errorMessage = fmt.Sprintf("%s already exists", columnName)
-					errorStatus = http.StatusConflict
-				} else {
-					errorMessage = fmt.Sprintf("%s already exists", pgErr.ConstraintName)
-					errorStatus = http.StatusConflict
-				}
-
-				utils.RespondError(w, errorStatus, errorMessage)
-				return
-			}
+		if status, message, ok := utils.HandleUniqueConstraintError(err); ok {
+			utils.RespondError(w, status, message)
+			return
 		}
 
 		// default
