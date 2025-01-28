@@ -3,9 +3,9 @@ package constants
 type Role string
 
 const (
-	MANAGER    Role = "MANAGER"
-	ADMIN      Role = "ADMIN"
-	HOTELOWNER Role = "HOTELOWNER"
-	GUEST      Role = "GUEST"
-	STAFF      Role = "STAFF"
+	ADMIN         Role = "ADMIN"
+	PROPERTYOWNER Role = "PROPERTYOWNER"
+	MANAGER       Role = "MANAGER"
+	STAFF         Role = "STAFF"
+	GUEST         Role = "GUEST"
 )

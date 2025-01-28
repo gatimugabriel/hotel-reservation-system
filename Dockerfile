@@ -6,7 +6,7 @@ COPY . .
 RUN go mod download
 
 # Build the application
-RUN go build -o main ./cmd/api
+RUN go build -o main ./cmd/app
 
 ############# New stage #######
 FROM alpine:latest
