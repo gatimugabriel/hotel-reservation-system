@@ -2,11 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
+	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils/input"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"net/http"
-	"strings"
+	"regexp"
 )
 
 type RoomHandler struct {
@@ -29,12 +34,13 @@ func (h *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, rooms)
+	roomsCount := len(rooms)
+	utils.RespondPaginatedJSON(w, http.StatusOK, rooms, roomsCount, 0000, 0000)
 }
 
 func (h *RoomHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/v1/room/")
-	room, err := h.roomService.GetRoom(r.Context(), id)
+	idStr := utils.GetResourceIDFromURL(r)
+	room, err := h.roomService.GetRoom(r.Context(), idStr)
 	if err != nil {
 		utils.RespondError(w, http.StatusNotFound, "Room not found")
 		return
@@ -52,6 +58,32 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	createdRoom, err := h.roomService.CreateRoom(r.Context(), &roomData)
 	if err != nil {
+
+		errorMessage := ""
+		errorStatus := http.StatusInternalServerError
+
+		// Check for unique constraint violation
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				//  Extract column name and value for the detail message
+				re := regexp.MustCompile(`Key \(([^)]+)\)=\([^)]*\) already exists.`)
+				matches := re.FindStringSubmatch(pgErr.Detail)
+				if len(matches) == 2 {
+					columnName := matches[1]
+					errorMessage = fmt.Sprintf("%s already exists", columnName)
+					errorStatus = http.StatusConflict
+				} else {
+					errorMessage = fmt.Sprintf("%s already exists", pgErr.ConstraintName)
+					errorStatus = http.StatusConflict
+				}
+
+				utils.RespondError(w, errorStatus, errorMessage)
+				return
+			}
+		}
+
+		// default
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room")
 		return
 	}
@@ -101,14 +133,78 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 // ___ Room Types____//
 
+// CreateRoomType creates a new room type
 func (h *RoomHandler) CreateRoomType(w http.ResponseWriter, r *http.Request) {
+	var roomData entity.RoomType
+	if err := json.NewDecoder(r.Body).Decode(&roomData); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
 
+	//Sanitize & ValidateStruct
+	if validationErrors := input.ValidateStruct(roomData); validationErrors != nil {
+		utils.RespondJSON(w, http.StatusBadRequest, validationErrors)
+	}
+
+	createdRoomType, err := h.roomTypeService.CreateRoomType(r.Context(), &roomData)
+	if err != nil {
+		errorMessage := ""
+		errorStatus := http.StatusInternalServerError
+
+		// Check for unique constraint violation
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				//  Extract column name and value for the detail message
+				re := regexp.MustCompile(`Key \(([^)]+)\)=\([^)]*\) already exists.`)
+				matches := re.FindStringSubmatch(pgErr.Detail)
+				if len(matches) == 2 {
+					columnName := matches[1]
+					errorMessage = fmt.Sprintf("%s already exists", columnName)
+					errorStatus = http.StatusConflict
+				} else {
+					errorMessage = fmt.Sprintf("%s already exists", pgErr.ConstraintName)
+					errorStatus = http.StatusConflict
+				}
+
+				utils.RespondError(w, errorStatus, errorMessage)
+				return
+			}
+		}
+
+		// default
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room type")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusCreated, createdRoomType)
 }
 
+// GetTypeDetails retrieves details of a specific room type
 func (h *RoomHandler) GetTypeDetails(w http.ResponseWriter, r *http.Request) {
+	idStr := utils.GetResourceIDFromURL(r)
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid room type ID")
+		return
+	}
 
+	roomType, err := h.roomTypeService.GetRoomType(r.Context(), id)
+	if err != nil {
+		utils.RespondError(w, http.StatusNotFound, "Room type not found")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, roomType)
 }
 
+// ListRoomTypes retrieves a list of all room types
 func (h *RoomHandler) ListRoomTypes(w http.ResponseWriter, r *http.Request) {
+	roomTypes, err := h.roomTypeService.ListRoomTypes(r.Context())
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to retrieve room types")
+		return
+	}
 
+	utils.RespondJSON(w, http.StatusOK, roomTypes)
 }

@@ -8,34 +8,36 @@ import (
 )
 
 type RoomTypeService interface {
-	CreateRoomType(ctx context.Context, roomType *entity.RoomType) error
+	CreateRoomType(ctx context.Context, roomType *entity.RoomType) (*entity.RoomType, error)
 	GetRoomType(ctx context.Context, id uuid.UUID) (*entity.RoomType, error)
-	ListRoomTypes(ctx context.Context, id uuid.UUID) ([]*entity.RoomType, error)
-	UpdateRoomType(ctx context.Context, roomType *entity.RoomType) error
+	ListRoomTypes(ctx context.Context) ([]*entity.RoomType, error)
+	UpdateRoomType(ctx context.Context, roomType *entity.RoomType) (*entity.RoomType, error)
 }
 
 type RoomTypeServiceImpl struct {
 	repo repository.RoomTypeRepository
 }
 
-func (r RoomTypeServiceImpl) CreateRoomType(ctx context.Context, roomType *entity.RoomType) error {
-	//TODO implement me
-	panic("implement me")
+func (r RoomTypeServiceImpl) CreateRoomType(ctx context.Context, roomType *entity.RoomType) (*entity.RoomType, error) {
+	if err := r.repo.Create(ctx, roomType); err != nil {
+		return nil, err
+	}
+	return roomType, nil
 }
 
 func (r RoomTypeServiceImpl) GetRoomType(ctx context.Context, id uuid.UUID) (*entity.RoomType, error) {
-	//TODO implement me
-	panic("implement me")
+	return r.repo.GetByID(ctx, id)
 }
 
-func (r RoomTypeServiceImpl) ListRoomTypes(ctx context.Context, id uuid.UUID) ([]*entity.RoomType, error) {
-	//TODO implement me
-	panic("implement me")
+func (r RoomTypeServiceImpl) ListRoomTypes(ctx context.Context) ([]*entity.RoomType, error) {
+	return r.repo.GetAll(ctx)
 }
 
-func (r RoomTypeServiceImpl) UpdateRoomType(ctx context.Context, roomType *entity.RoomType) error {
-	//TODO implement me
-	panic("implement me")
+func (r RoomTypeServiceImpl) UpdateRoomType(ctx context.Context, roomType *entity.RoomType) (*entity.RoomType, error) {
+	if err := r.repo.Update(ctx, roomType); err != nil {
+		return nil, err
+	}
+	return roomType, nil
 }
 
 func NewRoomTypeService(roomTypeRepo repository.RoomTypeRepository) *RoomTypeServiceImpl {

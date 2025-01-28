@@ -16,9 +16,8 @@ import (
 // @return http.Handler
 func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	roomRepo := repository.NewRoomRepository(db)
-	roomService := services.NewRoomService(roomRepo)
-
 	roomTypeRepo := repository.NewRoomTypeRepository(db)
+	roomService := services.NewRoomService(roomRepo, roomTypeRepo)
 	roomTypeService := services.NewRoomTypeService(roomTypeRepo)
 	handler := handlers.NewRoomHandler(roomService, roomTypeService)
 
@@ -51,6 +50,7 @@ func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	//___Public routes ___//
 	//1. rooms
 	r.HandleFunc("GET /room-details/{roomID}", handler.GetRoom)
+	r.HandleFunc("GET /all-rooms", handler.GetRooms)
 	r.HandleFunc("GET /search", handler.GetRooms)
 
 	//2. room types

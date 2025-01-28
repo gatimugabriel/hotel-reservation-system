@@ -20,16 +20,36 @@ type RoomService interface {
 }
 
 type RoomServiceImpl struct {
-	roomRepo repository.RoomRepository
+	roomRepo     repository.RoomRepository
+	roomTypeRepo repository.RoomTypeRepository
 }
 
-func NewRoomService(roomRepo repository.RoomRepository) *RoomServiceImpl {
+func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.RoomTypeRepository) *RoomServiceImpl {
 	return &RoomServiceImpl{
-		roomRepo: roomRepo,
+		roomRepo:     roomRepo,
+		roomTypeRepo: roomTypeRepo,
 	}
 }
 
 func (r *RoomServiceImpl) CreateRoom(ctx context.Context, room *entity.Room) (*entity.Room, error) {
+	// If RoomTypeID is not provided, look it up by RoomTypeName
+	if room.RoomTypeID == uuid.Nil && room.RoomTypeName != "" {
+		roomType, err := r.roomTypeRepo.GetByName(ctx, room.RoomTypeName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get room type by name: %w", err)
+		}
+		if roomType == nil {
+			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomTypeName)
+		}
+		room.RoomTypeID = roomType.ID
+	}
+
+	// Validate that RoomTypeID is set
+	if room.RoomTypeID == uuid.Nil {
+		return nil, fmt.Errorf("room type ID or name is required")
+	}
+
+	// Create the room
 	if err := r.roomRepo.Create(ctx, room); err != nil {
 		return nil, fmt.Errorf("failed to create room: %w", err)
 	}

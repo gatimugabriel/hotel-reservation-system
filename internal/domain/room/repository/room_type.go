@@ -14,6 +14,7 @@ import (
 // RoomTypeRepository defines the interface for room type persistence operations
 type RoomTypeRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*entity.RoomType, error)
+	GetByName(ctx context.Context, name string) (*entity.RoomType, error)
 	GetAll(ctx context.Context) ([]*entity.RoomType, error)
 	Create(ctx context.Context, roomType *entity.RoomType) error
 	Update(ctx context.Context, roomType *entity.RoomType) error
@@ -34,6 +35,18 @@ func NewRoomTypeRepository(db *database.Service) *RoomTypeRepositoryImpl {
 func (repo *RoomTypeRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID) (*entity.RoomType, error) {
 	var roomType entity.RoomType
 	err := repo.db.WithContext(ctx).First(&roomType, "id = ?", id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &roomType, nil
+}
+
+func (repo *RoomTypeRepositoryImpl) GetByName(ctx context.Context, name string) (*entity.RoomType, error) {
+	var roomType entity.RoomType
+	err := repo.db.WithContext(ctx).First(&roomType, "name = ?", name).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
