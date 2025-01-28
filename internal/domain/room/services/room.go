@@ -13,10 +13,12 @@ type RoomService interface {
 	CreateRoom(ctx context.Context, room *entity.Room) (*entity.Room, error)
 	UpdateRoom(ctx context.Context, id uuid.UUID, room *entity.Room) (*entity.Room, error)
 	DeleteRoom(ctx context.Context, id uuid.UUID) error
-	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error)
+
 	MarkRoomMaintenance(ctx context.Context, id uuid.UUID, maintenance bool) error
-	GetRoom(ctx context.Context, id string) (*entity.Room, error)
+
+	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error)
 	GetRooms(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error)
+	GetRoom(ctx context.Context, id string) (*entity.Room, error)
 }
 
 type RoomServiceImpl struct {
@@ -79,33 +81,40 @@ func (r *RoomServiceImpl) DeleteRoom(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error) {
-	// Get all rooms for the hotel
-	rooms, err := r.roomRepo.GetByHotelID(ctx, hotelID)
+	//// Get all rooms for the hotel
+	//rooms, err := r.roomRepo.GetByHotelID(ctx, hotelID)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to get rooms: %w", err)
+	//}
+
+	//// Get reservations for the date range
+	//reservations, err := r.roomRepo.GetReservationsForDateRange(ctx, checkIn, checkOut)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to get reservations: %w", err)
+	//}
+	//
+	//// Create a map of reserved room IDs
+	//reservedRooms := make(map[uuid.UUID]bool)
+	//for _, reservation := range reservations {
+	//	reservedRooms[reservation.ID] = true
+	//}
+	//
+	//// Filter available rooms
+	//var availableRooms []*entity.Room
+	//for _, room := range rooms {
+	//	if !reservedRooms[room.ID] && !room.IsMaintenance {
+	//		availableRooms = append(availableRooms, room)
+	//	}
+	//}
+	//
+	//return availableRooms, nil
+
+	rooms, err := r.roomRepo.GetAvailableRooms(ctx, hotelID, checkIn, checkOut)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get rooms: %w", err)
+		return nil, fmt.Errorf("failed to get available rooms: %w", err)
 	}
 
-	// Get reservations for the date range
-	reservations, err := r.roomRepo.GetReservationsForDateRange(ctx, checkIn, checkOut)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get reservations: %w", err)
-	}
-
-	// Create a map of reserved room IDs
-	reservedRooms := make(map[uuid.UUID]bool)
-	for _, reservation := range reservations {
-		reservedRooms[reservation.ID] = true
-	}
-
-	// Filter available rooms
-	var availableRooms []*entity.Room
-	for _, room := range rooms {
-		if !reservedRooms[room.ID] && !room.IsMaintenance {
-			availableRooms = append(availableRooms, room)
-		}
-	}
-
-	return availableRooms, nil
+	return rooms, nil
 }
 
 func (r *RoomServiceImpl) MarkRoomMaintenance(ctx context.Context, id uuid.UUID, maintenance bool) error {

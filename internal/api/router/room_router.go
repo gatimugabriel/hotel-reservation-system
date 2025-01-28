@@ -51,7 +51,8 @@ func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	//1. rooms
 	r.HandleFunc("GET /room-details/{roomID}", handler.GetRoom)
 	r.HandleFunc("GET /all-rooms", handler.GetRooms)
-	r.HandleFunc("GET /search", handler.GetRooms)
+	r.HandleFunc("GET /available", handler.GetAvailableRooms)
+	//r.HandleFunc("GET /search", handler.Search)
 
 	//2. room types
 	r.HandleFunc("GET /type-details/{roomTypeID}", handler.GetTypeDetails)

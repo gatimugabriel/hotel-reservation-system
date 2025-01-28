@@ -14,12 +14,14 @@ import (
 
 // RoomRepository : data persistence database interaction interface
 type RoomRepository interface {
-	Create(ctx context.Context, room *entity.Room) error
-	GetByID(ctx context.Context, id uuid.UUID) (*entity.Room, error)
 	GetAvailableRooms(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*entity.Room, error)
+	GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error)
+
 	GetReservationsForDate(ctx context.Context, date time.Time) ([]*entity.Room, error)
 	GetReservationsForDateRange(ctx context.Context, in time.Time, out time.Time) ([]*entity.Room, error)
-	GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error)
+
+	Create(ctx context.Context, room *entity.Room) error
 	Update(ctx context.Context, room *entity.Room) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
@@ -160,13 +162,36 @@ func (repo *RoomRepositoryImpl) Delete(ctx context.Context, id uuid.UUID) error 
 
 func (repo *RoomRepositoryImpl) GetAvailableRooms(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error) {
 	var rooms []*entity.Room
+
 	err := repo.db.WithContext(ctx).
+		Preload("Hotel").
+		Preload("RoomType").
 		Where("hotel_id = ? AND is_available = ? AND is_maintenance = ?", hotelID, true, false).
-		// Add additional check for reservations if needed
 		Find(&rooms).Error
 	if err != nil {
 		return nil, err
 	}
+
+	// Map the full objects to limited ones
+	for _, room := range rooms {
+		// Map hotel fields
+		room.HotelInfo = entity.HotelLimited{
+			Name:          room.Hotel.Name,
+			ContactNumber: room.Hotel.ContactNumber,
+		}
+
+		// Map room type fields
+		room.RoomTypeInfo = entity.RoomTypeLimited{
+			Name:         room.RoomType.Name,
+			Description:  room.RoomType.Description,
+			BasePrice:    room.RoomType.BasePrice,
+			MaxOccupancy: room.RoomType.MaxOccupancy,
+			NumBeds:      room.RoomType.NumBeds,
+			BedType:      room.RoomType.BedType,
+			SquareMeters: room.RoomType.SquareMeters,
+		}
+	}
+
 	return rooms, nil
 }
 

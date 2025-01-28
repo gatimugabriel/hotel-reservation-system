@@ -112,7 +112,7 @@ package repository
 // 	checkIn := now.Add(24 * time.Hour)
 // 	checkOut := now.Add(48 * time.Hour)
 
-// 	rooms, err := repo.GetAvailableRooms(hotelID, checkIn, checkOut)
+// 	rooms, err := repo.CheckAvailability(hotelID, checkIn, checkOut)
 // 	assert.NoError(t, err)
 // 	assert.Len(t, rooms, 1)
 

@@ -40,6 +40,33 @@ func (h *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 	utils.RespondPaginatedJSON(w, http.StatusOK, rooms, roomsCount, 0000, 0000)
 }
 
+func (h *RoomHandler) GetAvailableRooms(w http.ResponseWriter, r *http.Request) {
+	// get dates from query params
+	checkinDate, err := utils.GetDateFromURL(r, "check_in")
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid checkin date")
+		return
+	}
+	checkoutDate, err := utils.GetDateFromURL(r, "check_out")
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid checkout date")
+		return
+	}
+
+	hotelIDStr := utils.GetParamFromURL(r, "hotel_id")
+	hotelID, err := uuid.Parse(hotelIDStr)
+
+	// get available rooms based on given checkin and checkout dates
+	rooms, err := h.roomService.CheckAvailability(r.Context(), hotelID, checkinDate, checkoutDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to get available rooms:"+err.Error())
+		return
+	}
+
+	roomsCount := len(rooms)
+	utils.RespondPaginatedJSON(w, http.StatusOK, rooms, roomsCount, 0000, 0000)
+}
+
 func (h *RoomHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
 	idStr := utils.GetResourceIDFromURL(r)
 	room, err := h.roomService.GetRoom(r.Context(), idStr)
