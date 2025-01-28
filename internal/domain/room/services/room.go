@@ -16,7 +16,7 @@ type RoomService interface {
 	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error)
 	MarkRoomMaintenance(ctx context.Context, id uuid.UUID, maintenance bool) error
 	GetRoom(ctx context.Context, id string) (*entity.Room, error)
-	GetRooms(ctx context.Context, id string) ([]*entity.Room, error)
+	GetRooms(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error)
 }
 
 type RoomServiceImpl struct {
@@ -33,13 +33,13 @@ func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.
 
 func (r *RoomServiceImpl) CreateRoom(ctx context.Context, room *entity.Room) (*entity.Room, error) {
 	// If RoomTypeID is not provided, look it up by RoomTypeName
-	if room.RoomTypeID == uuid.Nil && room.RoomTypeName != "" {
-		roomType, err := r.roomTypeRepo.GetByName(ctx, room.RoomTypeName)
+	if room.RoomTypeID == uuid.Nil && room.RoomTypeInfo.Name != "" {
+		roomType, err := r.roomTypeRepo.GetByName(ctx, room.RoomTypeInfo.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get room type by name: %w", err)
 		}
 		if roomType == nil {
-			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomTypeName)
+			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomTypeInfo.Name)
 		}
 		room.RoomTypeID = roomType.ID
 	}
@@ -136,15 +136,11 @@ func (r *RoomServiceImpl) GetRoom(ctx context.Context, id string) (*entity.Room,
 	return room, nil
 }
 
-func (r *RoomServiceImpl) GetRooms(ctx context.Context, hotelID string) ([]*entity.Room, error) {
-	id, err := uuid.Parse(hotelID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid hotel ID: %w", err)
-	}
-
-	rooms, err := r.roomRepo.GetByHotelID(ctx, id)
+func (r *RoomServiceImpl) GetRooms(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error) {
+	rooms, err := r.roomRepo.GetByHotelID(ctx, hotelID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rooms: %w", err)
 	}
+
 	return rooms, nil
 }

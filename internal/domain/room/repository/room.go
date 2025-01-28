@@ -37,23 +37,93 @@ func NewRoomRepository(db *database.Service) *RoomRepositoryImpl {
 
 func (repo *RoomRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID) (*entity.Room, error) {
 	var room entity.Room
-	err := repo.db.WithContext(ctx).First(&room, "id = ?", id).Error
+	err := repo.db.WithContext(ctx).
+		Preload("Hotel").
+		Preload("RoomType").
+		First(&room, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
+
+	// Map hotel fields
+	room.HotelInfo = entity.HotelLimited{
+		Name:          room.Hotel.Name,
+		ContactNumber: room.Hotel.ContactNumber,
+	}
+
+	//Map room type fields
+	room.RoomTypeInfo = entity.RoomTypeLimited{
+		Name:         room.RoomType.Name,
+		Description:  room.RoomType.Description,
+		BasePrice:    room.RoomType.BasePrice,
+		MaxOccupancy: room.RoomType.MaxOccupancy,
+		NumBeds:      room.RoomType.NumBeds,
+		BedType:      room.RoomType.BedType,
+	}
+
 	return &room, nil
 }
 
+//	func (repo *RoomRepositoryImpl) GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error) {
+//		var rooms []*entity.Room
+//		//err := repo.db.WithContext(ctx).Where("hotel_id = ?", hotelID).Find(&rooms).Error
+//
+//		//second method
+//		//use join to get the hotel name and room type details
+//		//err := repo.db.DB.Table("rooms").
+//		//	Select("rooms.room_number, hotels.name as hotel_name, room_types.name as room_type_details").
+//		//	Joins("left join hotels on rooms.hotel_id = hotels.id").
+//		//	Joins("left join room_types on rooms.room_type_id = room_types.id").
+//		//	Where("rooms.hotel_id = ?", hotelID).
+//		//	Find(&rooms).Error
+//
+//		//err := repo.db.DB.Joins("JOIN hotels ON rooms.hotel_id = hotels.id AND JOIN room_types ON rooms.room_type_id = room_types.id").Scan(&rooms).Error
+//
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		fmt.Println("rooms", rooms)
+//		return rooms, nil
+//	}
+
 func (repo *RoomRepositoryImpl) GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error) {
-	var rooms []*entity.Room
-	err := repo.db.WithContext(ctx).Where("hotel_id = ?", hotelID).Find(&rooms).Error
+	var responses []*entity.Room
+
+	err := repo.db.WithContext(ctx).
+		Preload("Hotel").
+		Preload("RoomType").
+		Where("hotel_id = ?", hotelID).
+		Find(&responses).Error
+
 	if err != nil {
 		return nil, err
 	}
-	return rooms, nil
+
+	// Map the full objects to limited ones
+	for _, room := range responses {
+		// Map hotel fields
+		room.HotelInfo = entity.HotelLimited{
+			Name:          room.Hotel.Name,
+			ContactNumber: room.Hotel.ContactNumber,
+		}
+
+		// Map room type fields
+		room.RoomTypeInfo = entity.RoomTypeLimited{
+			Name:         room.RoomType.Name,
+			Description:  room.RoomType.Description,
+			BasePrice:    room.RoomType.BasePrice,
+			MaxOccupancy: room.RoomType.MaxOccupancy,
+			NumBeds:      room.RoomType.NumBeds,
+			BedType:      room.RoomType.BedType,
+			SquareMeters: room.RoomType.SquareMeters,
+		}
+	}
+
+	return responses, nil
 }
 
 func (repo *RoomRepositoryImpl) Create(ctx context.Context, r *entity.Room) error {

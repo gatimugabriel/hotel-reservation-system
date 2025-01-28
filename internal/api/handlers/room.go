@@ -24,7 +24,13 @@ func NewRoomHandler(roomService services.RoomService, roomTypeService services.R
 
 func (h *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 	hotelID := r.URL.Query().Get("hotel_id")
-	rooms, err := h.roomService.GetRooms(r.Context(), hotelID)
+	id, err := uuid.Parse(hotelID)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid hotel ID")
+		return
+	}
+
+	rooms, err := h.roomService.GetRooms(r.Context(), id)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to get rooms")
 		return
@@ -60,7 +66,7 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// default
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room")
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room:"+err.Error())
 		return
 	}
 
@@ -130,7 +136,7 @@ func (h *RoomHandler) CreateRoomType(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// default
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room type")
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room type:"+err.Error())
 		return
 	}
 
