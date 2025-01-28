@@ -25,8 +25,8 @@ type RoomTypeRepositoryImpl struct {
 	db *database.Service
 }
 
-func NewRoomTypeRepository(db *database.Service) *RoomRepositoryImpl {
-	return &RoomRepositoryImpl{
+func NewRoomTypeRepository(db *database.Service) *RoomTypeRepositoryImpl {
+	return &RoomTypeRepositoryImpl{
 		db: db,
 	}
 }

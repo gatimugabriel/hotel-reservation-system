@@ -17,7 +17,10 @@ import (
 func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	roomRepo := repository.NewRoomRepository(db)
 	roomService := services.NewRoomService(roomRepo)
-	handler := handlers.NewRoomHandler(roomService)
+
+	roomTypeRepo := repository.NewRoomTypeRepository(db)
+	roomTypeService := services.NewRoomTypeService(roomTypeRepo)
+	handler := handlers.NewRoomHandler(roomService, roomTypeService)
 
 	allowedCreationRoles := []constants.Role{constants.MANAGER, constants.PROPERTYOWNER, constants.ADMIN}
 	roleCheckMiddleware := middleware.AuthWithRoleCheck(allowedCreationRoles)
