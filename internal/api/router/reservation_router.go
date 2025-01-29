@@ -19,13 +19,12 @@ func RegisterReservationRoutes(db *database.Service, r *http.ServeMux) http.Hand
 	roomRepo := roomRepository.NewRoomRepository(db)
 
 	reservationService := services.NewReservationService(reservationRepo, roomRepo)
-	//roomService := roomService.NewRoomService(reservationRepo, roomRepo)
 	handler := handlers.NewReservationHandler(reservationService)
 
 	r.HandleFunc("POST /create-reservation", handler.CreateReservation)
 	r.HandleFunc("PATCH /cancel/{reservationID}", handler.CancelReservation)
 	r.HandleFunc("GET /me", handler.GetUserReservations)
-	//r.HandleFunc("GET /{reservationID}", handler.GetReservation)
+	r.HandleFunc("GET /reservation-details/{reservationID}", handler.GetReservation)
 
 	return middleware.Authenticate(http.StripPrefix("/api/v1/reservation", r))
 }

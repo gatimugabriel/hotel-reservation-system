@@ -19,7 +19,7 @@ func RegisterUserProfileRoutes(db *database.Service, r *http.ServeMux) http.Hand
 
 	r.HandleFunc("GET /:id", handler.GetUserProfile)
 	//r.HandleFunc("PUT /:id", handler.UpdateUserProfile)
-	//r.HandleFunc("PUT /:id", handler.DeleteUser)
+	//r.HandleFunc("DELETE /:id", handler.DeleteUser)
 	//r.HandleFunc("GET /all", handler.GetUsers)
 
 	return http.StripPrefix("/api/v1/user", r)

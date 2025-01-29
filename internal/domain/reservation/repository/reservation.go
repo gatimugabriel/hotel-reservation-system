@@ -33,7 +33,7 @@ func NewReservationRepository(db *database.Service) *ReservationRepositoryImpl {
 
 func (repo *ReservationRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID) (*entity.Reservation, error) {
 	var reservation entity.Reservation
-	if err := repo.db.DB.WithContext(ctx).Where("id = ?", id).First(&reservation).Error; err != nil {
+	if err := repo.db.WithContext(ctx).Where("id = ?", id).First(&reservation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("reservation not found")
 		}

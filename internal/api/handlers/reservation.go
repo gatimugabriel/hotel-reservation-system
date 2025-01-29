@@ -99,8 +99,9 @@ func (h *ReservationHandler) CancelReservation(w http.ResponseWriter, r *http.Re
 	}
 
 	reservation, err := h.reservationService.GetReservation(r.Context(), id)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+	if err != nil || reservation == nil {
+		utils.RespondError(w, http.StatusInternalServerError, "failed to get reservation: ")
+		return
 	}
 	reservation.Status = entity.StatusCancelled
 
@@ -117,7 +118,7 @@ func (h *ReservationHandler) GetUserReservations(w http.ResponseWriter, r *http.
 	userIDStr := r.Context().Value("userID").(string)
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, "Invalid user ID")
 		return
 	}
 
@@ -130,32 +131,19 @@ func (h *ReservationHandler) GetUserReservations(w http.ResponseWriter, r *http.
 	utils.RespondJSON(w, http.StatusOK, reservations)
 }
 
-func (h *ReservationHandler) UpdateReservationStatus(w http.ResponseWriter, r *http.Request) {
-	idStr := utils.GetParamFromURL(r, "id")
-	id, err := uuid.Parse(idStr)
+func (h *ReservationHandler) GetReservation(w http.ResponseWriter, r *http.Request) {
+	reservationID := utils.GetResourceIDFromURL(r)
+	reservationIDParsed, err := uuid.Parse(reservationID)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid reservation ID")
 		return
 	}
 
-	var updateReq struct {
-		Status string `json:"status"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&updateReq); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	if updateReq.Status == "" {
-		utils.RespondError(w, http.StatusBadRequest, "Status is required")
-		return
-	}
-
-	updatedReservation, err := h.reservationService.UpdateReservation(r.Context(), id)
+	reservation, err := h.reservationService.GetReservation(r.Context(), reservationIDParsed)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, updatedReservation)
+	utils.RespondJSON(w, http.StatusOK, reservation)
 }
