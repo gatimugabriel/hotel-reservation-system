@@ -15,6 +15,7 @@ import (
 func RunMigrations(db *gorm.DB) error {
 	// Enable uuid-ossp extension for UUID support
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "citext";`) // allow case insensitive
 
 	// Auto-migrate all models
 	return db.AutoMigrate(
