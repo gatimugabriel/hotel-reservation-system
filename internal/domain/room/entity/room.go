@@ -45,7 +45,7 @@ type RoomTypeLimited struct {
 
 type Room struct {
 	ID            uuid.UUID       `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	RoomNumber    int             `gorm:"type:varchar(5);not null;uniqueIndex:idx_hotel_room_number,priority:2" json:"room_number" validate:"required,min=1,max=5"`
+	RoomNumber    int             `gorm:"type:int(5);not null;uniqueIndex:idx_hotel_room_number,priority:2" json:"room_number" validate:"required,min=1,max=5"`
 	HotelID       uuid.UUID       `gorm:"type:uuid;not null;uniqueIndex:idx_hotel_room_number,priority:1;index" json:"hotel_id" validate:"required"`
 	RoomTypeID    uuid.UUID       `gorm:"type:uuid;not null;index" json:"room_type_id" validate:"required"`
 	FloorNumber   int             `gorm:"type:int;default=0" json:"floor_number" validate:"required,min=0"`
