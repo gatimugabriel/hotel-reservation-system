@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
+	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/google/uuid"
+	"log"
 	"time"
 )
 
@@ -18,6 +20,8 @@ type ReservationService interface {
 	CheckOut(ctx context.Context, id uuid.UUID) error
 	GetUserReservations(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error)
 	ValidateReservation(ctx context.Context, reservation *entity.Reservation) error
+
+	GetRoomByNumber(ctx context.Context, roomNumber int) (*roomEntity.Room, error)
 }
 
 type ReservationServiceImpl struct {
@@ -33,14 +37,11 @@ func NewReservationService(reservationRepo repository.ReservationRepository, roo
 }
 
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error) {
-	// Validate the reservation first
 	if err := r.ValidateReservation(ctx, reservation); err != nil {
 		return nil, err
 	}
 
-	// Set initial status
-	reservation.Status = entity.StatusPending
-
+	log.Println("Creating reservation...")
 	if err := r.reservationRepo.Create(ctx, reservation); err != nil {
 		return nil, fmt.Errorf("failed to create reservation: %w", err)
 	}
@@ -117,6 +118,14 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 	return reservations, nil
 }
 
+func (r *ReservationServiceImpl) GetRoomByNumber(ctx context.Context, roomNumber int) (*roomEntity.Room, error) {
+	room, err := r.roomRepo.GetByNumber(ctx, roomNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get room by number: %w", err)
+	}
+	return room, nil
+}
+
 func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reservation *entity.Reservation) error {
 	// Check for valid dates
 	if reservation.CheckInDate.After(reservation.CheckOutDate) {
@@ -124,10 +133,10 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 	}
 
 	if reservation.CheckInDate.Before(time.Now()) {
+
 		return fmt.Errorf("check-in date must be in the future")
 	}
 
-	// Check if room is available
 	conflictingReservations, err := r.reservationRepo.GetByDateRange(ctx, reservation.CheckInDate, reservation.CheckOutDate)
 	if err != nil {
 		return fmt.Errorf("failed to check room availability: %w", err)
@@ -135,18 +144,18 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 
 	for _, existing := range conflictingReservations {
 		if existing.RoomID == reservation.RoomID && existing.ID != reservation.ID {
-			return fmt.Errorf("room is not available for the selected dates")
+			return fmt.Errorf("room is not available for the selected dates, it might have been booked before you reserved it")
 		}
 	}
 
-	// Check if room exists and is not under maintenance
+	// Check if room exists and has not been marked under maintenance
 	room, err := r.roomRepo.GetByID(ctx, reservation.RoomID)
-	if err != nil {
-		return fmt.Errorf("failed to get room: %w", err)
+	if err != nil || room == nil {
+		return fmt.Errorf("failed to get room with that ID: %v", err)
 	}
 
 	if room.IsMaintenance {
-		return fmt.Errorf("room is under maintenance")
+		return fmt.Errorf("room has been marked under maintenance")
 	}
 
 	return nil
