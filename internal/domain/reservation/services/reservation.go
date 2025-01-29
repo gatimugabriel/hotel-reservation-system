@@ -14,13 +14,12 @@ import (
 type ReservationService interface {
 	CreateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error)
 	UpdateReservation(ctx context.Context, id uuid.UUID) (*entity.Reservation, error)
-	CancelReservation(ctx context.Context, id uuid.UUID) error
-	CheckIn(ctx context.Context, id uuid.UUID) error
-	CheckOut(ctx context.Context, id uuid.UUID) error
-	GetUserReservations(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error)
-	ValidateReservation(ctx context.Context, reservation *entity.Reservation) error
 
+	GetUserReservations(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error)
+	GetReservation(ctx context.Context, id uuid.UUID) (*entity.Reservation, error)
 	GetRoomByNumber(ctx context.Context, roomNumber int) (*roomEntity.Room, error)
+
+	ValidateReservation(ctx context.Context, reservation *entity.Reservation) error
 }
 
 type ReservationServiceImpl struct {
@@ -72,48 +71,20 @@ func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, id uuid.
 	return nil
 }
 
-func (r *ReservationServiceImpl) CheckIn(ctx context.Context, id uuid.UUID) error {
-	reservation, err := r.reservationRepo.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("failed to get reservation: %w", err)
-	}
-
-	if reservation.Status != entity.StatusConfirmed {
-		return fmt.Errorf("reservation must be confirmed before check-in")
-	}
-
-	reservation.Status = entity.StatusInProgress
-
-	if err := r.reservationRepo.Update(ctx, reservation); err != nil {
-		return fmt.Errorf("failed to update reservation status: %w", err)
-	}
-	return nil
-}
-
-func (r *ReservationServiceImpl) CheckOut(ctx context.Context, id uuid.UUID) error {
-	reservation, err := r.reservationRepo.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("failed to get reservation: %w", err)
-	}
-
-	if reservation.Status != entity.StatusInProgress {
-		return fmt.Errorf("reservation must be in progress for check-out")
-	}
-
-	reservation.Status = entity.StatusCompleted
-
-	if err := r.reservationRepo.Update(ctx, reservation); err != nil {
-		return fmt.Errorf("failed to update reservation status: %w", err)
-	}
-	return nil
-}
-
 func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error) {
 	reservations, err := r.reservationRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user reservations: %w", err)
 	}
 	return reservations, nil
+}
+
+func (r *ReservationServiceImpl) GetReservation(ctx context.Context, id uuid.UUID) (*entity.Reservation, error) {
+	reservation, err := r.reservationRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get reservation: %w", err)
+	}
+	return reservation, nil
 }
 
 func (r *ReservationServiceImpl) GetRoomByNumber(ctx context.Context, roomNumber int) (*roomEntity.Room, error) {

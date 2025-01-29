@@ -90,8 +90,36 @@ func (h *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.Re
 	utils.RespondJSON(w, http.StatusCreated, createdReservation)
 }
 
+func (h *ReservationHandler) CancelReservation(w http.ResponseWriter, r *http.Request) {
+	idStr := utils.GetResourceIDFromURL(r)
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid reservation ID")
+		return
+	}
+
+	reservation, err := h.reservationService.GetReservation(r.Context(), id)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+	}
+	reservation.Status = entity.StatusCancelled
+
+	_, err = h.reservationService.UpdateReservation(r.Context(), id)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "failed to cancel reservation: "+err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Reservation cancelled successfully"})
+}
+
 func (h *ReservationHandler) GetUserReservations(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userId").(uuid.UUID)
+	userIDStr := r.Context().Value("userID").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	reservations, err := h.reservationService.GetUserReservations(r.Context(), userID)
 	if err != nil {
@@ -130,20 +158,4 @@ func (h *ReservationHandler) UpdateReservationStatus(w http.ResponseWriter, r *h
 	}
 
 	utils.RespondJSON(w, http.StatusOK, updatedReservation)
-}
-
-func (h *ReservationHandler) CancelReservation(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Query().Get("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid reservation ID")
-		return
-	}
-
-	if err := h.reservationService.CancelReservation(r.Context(), id); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Reservation cancelled successfully"})
 }

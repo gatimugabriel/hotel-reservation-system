@@ -23,7 +23,7 @@ func RegisterReservationRoutes(db *database.Service, r *http.ServeMux) http.Hand
 	handler := handlers.NewReservationHandler(reservationService)
 
 	r.HandleFunc("POST /create-reservation", handler.CreateReservation)
-	r.HandleFunc("PUT /cancel-reservation", handler.CancelReservation)
+	r.HandleFunc("PATCH /cancel/{reservationID}", handler.CancelReservation)
 	r.HandleFunc("GET /me", handler.GetUserReservations)
 	//r.HandleFunc("GET /{reservationID}", handler.GetReservation)
 
