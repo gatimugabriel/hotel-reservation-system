@@ -16,6 +16,7 @@ import (
 type RoomRepository interface {
 	GetAvailableRooms(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*entity.Room, error)
+	GetByNumber(ctx context.Context, roomNumber int) (*entity.Room, error)
 	GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error)
 
 	GetReservationsForDate(ctx context.Context, date time.Time) ([]*entity.Room, error)
@@ -69,28 +70,37 @@ func (repo *RoomRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID) (*ent
 	return &room, nil
 }
 
-//	func (repo *RoomRepositoryImpl) GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error) {
-//		var rooms []*entity.Room
-//		//err := repo.db.WithContext(ctx).Where("hotel_id = ?", hotelID).Find(&rooms).Error
-//
-//		//second method
-//		//use join to get the hotel name and room type details
-//		//err := repo.db.DB.Table("rooms").
-//		//	Select("rooms.room_number, hotels.name as hotel_name, room_types.name as room_type_details").
-//		//	Joins("left join hotels on rooms.hotel_id = hotels.id").
-//		//	Joins("left join room_types on rooms.room_type_id = room_types.id").
-//		//	Where("rooms.hotel_id = ?", hotelID).
-//		//	Find(&rooms).Error
-//
-//		//err := repo.db.DB.Joins("JOIN hotels ON rooms.hotel_id = hotels.id AND JOIN room_types ON rooms.room_type_id = room_types.id").Scan(&rooms).Error
-//
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		fmt.Println("rooms", rooms)
-//		return rooms, nil
-//	}
+func (repo *RoomRepositoryImpl) GetByNumber(ctx context.Context, roomNumber int) (*entity.Room, error) {
+	var room entity.Room
+	err := repo.db.WithContext(ctx).
+		Preload("Hotel").
+		Preload("RoomType").
+		First(&room, "room_number = ?", roomNumber).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	// Map hotel fields
+	room.HotelInfo = entity.HotelLimited{
+		Name:          room.Hotel.Name,
+		ContactNumber: room.Hotel.ContactNumber,
+	}
+
+	//Map room type fields
+	room.RoomTypeInfo = entity.RoomTypeLimited{
+		Name:         room.RoomType.Name,
+		Description:  room.RoomType.Description,
+		BasePrice:    room.RoomType.BasePrice,
+		MaxOccupancy: room.RoomType.MaxOccupancy,
+		NumBeds:      room.RoomType.NumBeds,
+		BedType:      room.RoomType.BedType,
+	}
+
+	return &room, nil
+}
 
 func (repo *RoomRepositoryImpl) GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error) {
 	var responses []*entity.Room
