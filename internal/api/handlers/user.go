@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/config"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
@@ -99,6 +100,8 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
+
+	fmt.Println(time.Now().Add(15 * time.Minute))
 
 	// Set HTTP_only cookies
 	http.SetCookie(w, &http.Cookie{

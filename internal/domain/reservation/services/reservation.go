@@ -8,7 +8,6 @@ import (
 	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/google/uuid"
-	"log"
 	"time"
 )
 
@@ -41,7 +40,6 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 		return nil, err
 	}
 
-	log.Println("Creating reservation...")
 	if err := r.reservationRepo.Create(ctx, reservation); err != nil {
 		return nil, fmt.Errorf("failed to create reservation: %w", err)
 	}
@@ -144,7 +142,7 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 
 	for _, existing := range conflictingReservations {
 		if existing.RoomID == reservation.RoomID && existing.ID != reservation.ID {
-			return fmt.Errorf("room is not available for the selected dates, it might have been booked before you reserved it")
+			return fmt.Errorf("room is not available for the selected dates, already booked/it might have been booked before you reserved it")
 		}
 	}
 

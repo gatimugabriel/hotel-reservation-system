@@ -17,12 +17,12 @@ func RegisterRouter(dbService *database.Service, r *http.ServeMux) {
 	//__ 3. ROOMS __//
 	r.Handle("/api/v1/room/", RegisterRoomRoutes(dbService, r))
 
-	////__ 4. RESERVATIONS __//
-	//r.Handle("/reservation/", RegisterHotelRoutes(dbService, r))
-	//
+	//__ 4. RESERVATIONS __//
+	r.Handle("/api/v1/reservation/", RegisterReservationRoutes(dbService, r))
+
 	////__ 5. PAYMENTS __//
-	//r.Handle("/payment/", RegisterHotelRoutes(dbService, r))
+	//r.Handle("/payment/", RegisterPaymentRoutes(dbService, r))
 	//
 	////__ 6. NOTIFICATIONS __//
-	//r.Handle("/notification/", RegisterHotelRoutes(dbService, r))
+	//r.Handle("/notification/", RegisterNotificationRoutes(dbService, r))
 }

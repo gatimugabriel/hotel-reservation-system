@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
-	"log"
 	"net/http"
 	"strings"
 )

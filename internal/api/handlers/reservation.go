@@ -6,7 +6,6 @@ import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
 	"github.com/google/uuid"
-	"io"
 	"net/http"
 	"time"
 )
@@ -21,45 +20,65 @@ func NewReservationHandler(reservationService services.ReservationService) *Rese
 	}
 }
 
-type CreateReservationRequest struct {
-	RoomID       uuid.UUID `json:"room_id"`
-	UserID       uuid.UUID `json:"user_id"`
-	CheckInDate  time.Time `json:"check_in_date"`
-	CheckoutDate time.Time `json:"check_out_date"`
-}
-
 func (h *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.Request) {
-	var req CreateReservationRequest
-
-	body, err := io.ReadAll(r.Body)
+	userIDStr := r.Context().Value("userID").(string)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	defer r.Body.Close()
-
-	if err := json.Unmarshal(body, &req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid JSON")
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Date validations
-	if req.CheckInDate.After(req.CheckoutDate) {
-		utils.RespondError(w, http.StatusBadRequest, "Start date must be before end date")
+	var roomID uuid.UUID
+	var totalPrice float64
+
+	var req entity.CreateReservationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	if req.RoomID == nil && req.RoomNumber == nil {
+		utils.RespondError(w, http.StatusBadRequest, "Either room_id or room_number must be provided")
 		return
 	}
 
-	if req.CheckInDate.Before(time.Now()) {
-		utils.RespondError(w, http.StatusBadRequest, "Start date cannot be in the past")
+	checkInDate, err := time.Parse("2006-01-02", req.CheckInDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid check-in date format")
 		return
+	}
+
+	checkOutDate, err := time.Parse("2006-01-02", req.CheckoutDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid check-out date format")
+		return
+	}
+
+	//if room id is not provided, get room id from the room_number given in body
+	if req.RoomID == nil {
+		room, err := h.reservationService.GetRoomByNumber(r.Context(), *req.RoomNumber)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		roomID = room.ID
+		totalPrice = float64(req.NumGuests) * room.RoomTypeInfo.BasePrice
+	} else {
+		id, err := uuid.Parse(*req.RoomID)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, "Invalid room ID")
+			return
+		}
+		roomID = id
 	}
 
 	newReservation := &entity.Reservation{
-		RoomID:       req.RoomID,
-		UserID:       req.UserID,
-		CheckInDate:  req.CheckInDate,
-		CheckOutDate: req.CheckoutDate,
-		Status:       "pending",
+		RoomID:         roomID,
+		UserID:         userID,
+		CheckInDate:    checkInDate,
+		CheckOutDate:   checkOutDate,
+		NumGuests:      req.NumGuests,
+		SpecialRequest: *req.SpecialRequest,
+		TotalPrice:     totalPrice,
 	}
 
 	createdReservation, err := h.reservationService.CreateReservation(r.Context(), newReservation)
@@ -72,12 +91,7 @@ func (h *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.Re
 }
 
 func (h *ReservationHandler) GetUserReservations(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.URL.Query().Get("userId")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid user ID")
-		return
-	}
+	userID := r.Context().Value("userId").(uuid.UUID)
 
 	reservations, err := h.reservationService.GetUserReservations(r.Context(), userID)
 	if err != nil {
@@ -89,7 +103,7 @@ func (h *ReservationHandler) GetUserReservations(w http.ResponseWriter, r *http.
 }
 
 func (h *ReservationHandler) UpdateReservationStatus(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Query().Get("id")
+	idStr := utils.GetParamFromURL(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid reservation ID")
@@ -99,20 +113,11 @@ func (h *ReservationHandler) UpdateReservationStatus(w http.ResponseWriter, r *h
 	var updateReq struct {
 		Status string `json:"status"`
 	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	defer r.Body.Close()
-
-	if err := json.Unmarshal(body, &updateReq); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid JSON")
+	if err := json.NewDecoder(r.Body).Decode(&updateReq); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	// Add status validation if needed
 	if updateReq.Status == "" {
 		utils.RespondError(w, http.StatusBadRequest, "Status is required")
 		return

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/infrastructure/database"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -77,6 +78,7 @@ func (repo *RoomRepositoryImpl) GetByNumber(ctx context.Context, roomNumber int)
 		Preload("RoomType").
 		First(&room, "room_number = ?", roomNumber).Error
 	if err != nil {
+		log.Println("db error", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -141,32 +143,6 @@ func (repo *RoomRepositoryImpl) GetByHotelID(ctx context.Context, hotelID uuid.U
 func (repo *RoomRepositoryImpl) Create(ctx context.Context, r *entity.Room) error {
 	return repo.db.Transaction(ctx, func(tx *gorm.DB) error {
 		return tx.Create(r).Error
-	})
-}
-
-func (repo *RoomRepositoryImpl) Update(ctx context.Context, r *entity.Room) error {
-	return repo.db.Transaction(ctx, func(tx *gorm.DB) error {
-		result := tx.Save(r)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errors.New("room not found")
-		}
-		return nil
-	})
-}
-
-func (repo *RoomRepositoryImpl) Delete(ctx context.Context, id uuid.UUID) error {
-	return repo.db.Transaction(ctx, func(tx *gorm.DB) error {
-		result := tx.Delete(&entity.Room{}, "id = ?", id)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errors.New("room not found")
-		}
-		return nil
 	})
 }
 
@@ -244,4 +220,30 @@ func (repo *RoomRepositoryImpl) GetReservationsForDateRange(ctx context.Context,
 	}
 
 	return rooms, nil
+}
+
+func (repo *RoomRepositoryImpl) Update(ctx context.Context, r *entity.Room) error {
+	return repo.db.Transaction(ctx, func(tx *gorm.DB) error {
+		result := tx.Save(r)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("room not found")
+		}
+		return nil
+	})
+}
+
+func (repo *RoomRepositoryImpl) Delete(ctx context.Context, id uuid.UUID) error {
+	return repo.db.Transaction(ctx, func(tx *gorm.DB) error {
+		result := tx.Delete(&entity.Room{}, "id = ?", id)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("room not found")
+		}
+		return nil
+	})
 }

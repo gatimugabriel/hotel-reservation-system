@@ -17,6 +17,7 @@ type ReservationRepository interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error)
 	GetByRoomID(ctx context.Context, roomID uuid.UUID) ([]*entity.Reservation, error)
 	GetByDateRange(ctx context.Context, checkIn, checkOut time.Time) ([]*entity.Reservation, error)
+
 	Create(ctx context.Context, reservation *entity.Reservation) error
 	Update(ctx context.Context, reservation *entity.Reservation) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -69,12 +70,6 @@ func (repo *ReservationRepositoryImpl) GetByDateRange(ctx context.Context, check
 }
 
 func (repo *ReservationRepositoryImpl) Create(ctx context.Context, reservation *entity.Reservation) error {
-	reservation.CreatedAt = time.Now()
-	reservation.UpdatedAt = time.Now()
-	if reservation.ID == uuid.Nil {
-		reservation.ID = uuid.New()
-	}
-
 	if err := repo.db.DB.WithContext(ctx).Create(reservation).Error; err != nil {
 		return fmt.Errorf("failed to create reservation: %w", err)
 	}
