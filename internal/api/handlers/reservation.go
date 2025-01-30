@@ -66,7 +66,7 @@ func (h *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.Re
 			return
 		}
 		roomID = room.ID
-		totalPrice = float64(req.NumGuests) * room.RoomTypeInfo.BasePrice
+		totalPrice = float64(req.NumGuests) * room.RoomType.BasePrice
 	} else {
 		id, err := uuid.Parse(*req.RoomID)
 		if err != nil {

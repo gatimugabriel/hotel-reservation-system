@@ -8,6 +8,8 @@ import (
 	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/google/uuid"
+	"log"
+	"time"
 )
 
 type ReservationService interface {
@@ -41,6 +43,25 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 	if err := r.reservationRepo.Create(ctx, reservation); err != nil {
 		return nil, fmt.Errorf("failed to create reservation: %w", err)
 	}
+
+	// Mark room as unavailable
+	go func() {
+		ctx := context.Background()
+		rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"id": reservation.RoomID})
+		if err != nil || len(rooms) == 0 {
+			log.Printf("Failed to get room: %v", err)
+			return
+		}
+
+		room := rooms[0]
+		room.IsAvailable = false
+		room.AvailableFrom = reservation.CheckOutDate
+
+		if err := r.roomRepo.Update(ctx, room); err != nil {
+			log.Printf("Failed to update room availability: %v", err)
+		}
+	}()
+
 	return reservation, nil
 }
 
@@ -91,14 +112,18 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 
 	// Check if room exists and has not been marked under maintenance
 	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"id": reservation.RoomID})
-	room := rooms[0]
-
-	if err != nil || room == nil {
+	if err != nil || len(rooms) == 0 {
 		return fmt.Errorf("failed to get room with that ID: %v", err)
 	}
 
+	room := rooms[0]
 	if room.UnderMaintenance {
 		return fmt.Errorf("room has been marked under maintenance")
+	}
+
+	// Check if the room is available for the given dates
+	if !room.IsAvailable && room.AvailableFrom.After(reservation.CheckInDate) {
+		return fmt.Errorf("room is not available until %s", room.AvailableFrom.Format(time.RFC3339))
 	}
 
 	return nil

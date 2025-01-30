@@ -49,7 +49,12 @@ func (repo *ReservationRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID
 
 func (repo *ReservationRepositoryImpl) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error) {
 	var reservations []*entity.Reservation
-	if err := repo.db.WithContext(ctx).Where("user_id = ?", userID).Find(&reservations).Error; err != nil {
+	if err := repo.db.WithContext(ctx).
+		Preload("Room").
+		Preload("User").
+		Preload("Room.RoomType").
+		Preload("Room.Hotel").
+		Where("user_id = ?", userID).Find(&reservations).Error; err != nil {
 		return nil, fmt.Errorf("failed to get reservations by user ID: %w", err)
 	}
 	return reservations, nil
