@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/services"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
 	"github.com/google/uuid"
 	"net/http"
-	"time"
 )
 
 type ReservationHandler struct {
@@ -41,15 +41,20 @@ func (h *ReservationHandler) CreateReservation(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	checkInDate, err := time.Parse("2006-01-02", req.CheckInDate)
+	checkInDate, err := utils.ParseAndValidateCheckInDate(req.CheckInDate)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid check-in date format")
+		utils.RespondError(w, http.StatusBadRequest, fmt.Sprintf("Invalid check-in date: %v", err))
+		return
+	}
+	checkOutDate, err := utils.ParseDate(req.CheckoutDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, fmt.Sprintf("Invalid check-out date: %v", err))
 		return
 	}
 
-	checkOutDate, err := time.Parse("2006-01-02", req.CheckoutDate)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid check-out date format")
+	// Validate check-in/check-out relationship
+	if err := utils.ValidateCheckInCheckOutDates(checkInDate, checkOutDate); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

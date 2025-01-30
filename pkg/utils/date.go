@@ -13,10 +13,42 @@ func ParseDate(dateStr string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("date string is empty")
 	}
 
-	// Parse the date string
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid date format: %v", err)
+	}
+
+	return date, nil
+}
+
+// ValidateCheckInDate ensures the check-in date is not in the past
+func ValidateCheckInDate(checkInDate time.Time) error {
+	today := time.Now()
+	today = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+
+	if checkInDate.Before(today) {
+		return fmt.Errorf("check-in date should start today onwards")
+	}
+	return nil
+}
+
+// ValidateCheckInCheckOutDates ensures checkout is after checkin
+func ValidateCheckInCheckOutDates(checkIn, checkOut time.Time) error {
+	if checkOut.Before(checkIn) {
+		return fmt.Errorf("check-out date must be after check-in date")
+	}
+	return nil
+}
+
+// ParseAndValidateCheckInDate combines parsing and validation for check-in dates
+func ParseAndValidateCheckInDate(dateStr string) (time.Time, error) {
+	date, err := ParseDate(dateStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if err := ValidateCheckInDate(date); err != nil {
+		return time.Time{}, err
 	}
 
 	return date, nil
@@ -32,13 +64,9 @@ func GetDateFromURL(r *http.Request, paramName string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	// validate check_in date (must start today)
 	if paramName == "check_in" {
-		today := time.Now()
-		today = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
-
-		if date.Before(today) {
-			return time.Time{}, fmt.Errorf("check-in date should start today onwards")
+		if err := ValidateCheckInDate(date); err != nil {
+			return time.Time{}, err
 		}
 	}
 
