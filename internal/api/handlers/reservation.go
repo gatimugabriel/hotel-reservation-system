@@ -105,13 +105,13 @@ func (h *ReservationHandler) CancelReservation(w http.ResponseWriter, r *http.Re
 	}
 	reservation.Status = entity.StatusCancelled
 
-	_, err = h.reservationService.UpdateReservation(r.Context(), id)
+	updated, err := h.reservationService.UpdateReservation(r.Context(), reservation)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "failed to cancel reservation: "+err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Reservation cancelled successfully"})
+	utils.RespondJSON(w, http.StatusOK, map[string]any{"message": "Reservation cancelled successfully", "updated": updated})
 }
 
 func (h *ReservationHandler) GetUserReservations(w http.ResponseWriter, r *http.Request) {

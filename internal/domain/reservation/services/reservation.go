@@ -13,7 +13,7 @@ import (
 
 type ReservationService interface {
 	CreateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error)
-	UpdateReservation(ctx context.Context, id uuid.UUID) (*entity.Reservation, error)
+	UpdateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error)
 
 	GetUserReservations(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error)
 	GetReservation(ctx context.Context, id uuid.UUID) (*entity.Reservation, error)
@@ -45,30 +45,12 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 	return reservation, nil
 }
 
-func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, id uuid.UUID) (*entity.Reservation, error) {
-	reservation, err := r.reservationRepo.GetByID(ctx, id)
+func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error) {
+	updatedReservation, err := r.reservationRepo.Update(ctx, reservation)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get reservation: %w", err)
-	}
-
-	if err := r.reservationRepo.Update(ctx, reservation); err != nil {
 		return nil, fmt.Errorf("failed to update reservation: %w", err)
 	}
-	return reservation, nil
-}
-
-func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, id uuid.UUID) error {
-	reservation, err := r.reservationRepo.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("failed to get reservation: %w", err)
-	}
-
-	reservation.Status = entity.StatusCancelled
-
-	if err := r.reservationRepo.Update(ctx, reservation); err != nil {
-		return fmt.Errorf("failed to cancel reservation: %w", err)
-	}
-	return nil
+	return updatedReservation, nil
 }
 
 func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error) {
@@ -123,7 +105,7 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 		return fmt.Errorf("failed to get room with that ID: %v", err)
 	}
 
-	if room.IsMaintenance {
+	if room.UnderMaintenance {
 		return fmt.Errorf("room has been marked under maintenance")
 	}
 
