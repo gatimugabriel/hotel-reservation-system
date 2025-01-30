@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	paymentRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/payment/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
@@ -26,18 +27,24 @@ type ReservationService interface {
 type ReservationServiceImpl struct {
 	reservationRepo repository.ReservationRepository
 	roomRepo        roomRepository.RoomRepository
+	paymentRepo     paymentRepository.PaymentRepository
 }
 
-func NewReservationService(reservationRepo repository.ReservationRepository, roomRepo roomRepository.RoomRepository) *ReservationServiceImpl {
+func NewReservationService(reservationRepo repository.ReservationRepository, roomRepo roomRepository.RoomRepository, paymentRepo paymentRepository.PaymentRepository) *ReservationServiceImpl {
 	return &ReservationServiceImpl{
 		reservationRepo: reservationRepo,
 		roomRepo:        roomRepo,
+		paymentRepo:     paymentRepo,
 	}
 }
 
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error) {
 	if err := r.ValidateReservation(ctx, reservation); err != nil {
 		return nil, err
+	}
+
+	if err := r.paymentRepo.Create(ctx, &reservation.Payment); err != nil {
+		return nil, fmt.Errorf("failed to create payment: %w", err)
 	}
 
 	if err := r.reservationRepo.Create(ctx, reservation); err != nil {
@@ -62,7 +69,11 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 		}
 	}()
 
-	return reservation, nil
+	createdReservation, err := r.reservationRepo.GetByID(ctx, reservation.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get created reservation: %w", err)
+	}
+	return createdReservation, nil
 }
 
 func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservation *entity.Reservation) (*entity.Reservation, error) {
@@ -90,12 +101,14 @@ func (r *ReservationServiceImpl) GetReservation(ctx context.Context, id uuid.UUI
 }
 
 func (r *ReservationServiceImpl) GetRoomByNumber(ctx context.Context, roomNumber int) (*roomEntity.Room, error) {
-	room, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"room_number": roomNumber})
-
+	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"room_number": roomNumber})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get room by number: %w", err)
 	}
-	return room[0], nil
+	if rooms == nil || len(rooms) == 0 {
+		return nil, fmt.Errorf("room with that number not found")
+	}
+	return rooms[0], nil
 }
 
 func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reservation *entity.Reservation) error {

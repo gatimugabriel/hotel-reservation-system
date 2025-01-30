@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/handlers"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/middleware"
+	paymentRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/payment/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/services"
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
@@ -17,8 +18,9 @@ import (
 func RegisterReservationRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	reservationRepo := repository.NewReservationRepository(db)
 	roomRepo := roomRepository.NewRoomRepository(db)
+	paymentRepo := paymentRepository.NewPaymentRepository(db)
 
-	reservationService := services.NewReservationService(reservationRepo, roomRepo)
+	reservationService := services.NewReservationService(reservationRepo, roomRepo, paymentRepo)
 	handler := handlers.NewReservationHandler(reservationService)
 
 	r.HandleFunc("POST /create-reservation", handler.CreateReservation)

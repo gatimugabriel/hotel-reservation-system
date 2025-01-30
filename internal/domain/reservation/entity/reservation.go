@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"encoding/json"
+	paymentEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/payment/entity"
 	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	userEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 	"github.com/google/uuid"
@@ -35,6 +37,9 @@ type Reservation struct {
 	UserID uuid.UUID       `gorm:"type:uuid;not null;index" json:"user_id" validate:"required"`
 	User   userEntity.User `gorm:"foreignKey:UserID;references:ID" json:"user"`
 
+	PaymentID uuid.UUID             `gorm:"type:uuid;index" json:"payment_id"`
+	Payment   paymentEntity.Payment `gorm:"foreignKey:PaymentID;references:ID" json:"payment,omitempty"`
+
 	CreatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
@@ -45,12 +50,11 @@ type CreateReservationRequest struct {
 	RoomID     *string `json:"room_id"`
 	RoomNumber *int    `json:"room_number"`
 
-	CheckInDate  string `json:"check_in_date"`
-	CheckoutDate string `json:"check_out_date"`
+	CheckInDate  string `json:"check_in_date" validate:"required"`
+	CheckoutDate string `json:"check_out_date" validate:"required"`
 
-	//CheckInDate  time.Time `json:"check_in_date"`
-	//CheckoutDate time.Time `json:"check_out_date"`
-
-	NumGuests      int     `json:"num_guests"`
-	SpecialRequest *string `json:"special_request"`
+	NumGuests      int                  `json:"num_guests" validate:"required"`
+	SpecialRequest *string              `json:"special_request"`
+	PaymentMethod  paymentEntity.Method `json:"payment_method,omitempty" validate:"required,oneof=CREDIT_CARD DEBIT_CARD PAYPAL BANK_TRANSFER CRYPTO CASH"`
+	PaymentDetails json.RawMessage      `json:"payment_details,omitempty" validate:"required"`
 }
