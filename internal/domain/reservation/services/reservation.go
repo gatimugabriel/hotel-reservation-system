@@ -8,6 +8,7 @@ import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
+	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
 	"github.com/google/uuid"
 	"log"
 	"time"
@@ -73,6 +74,29 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 	if err != nil {
 		return nil, fmt.Errorf("failed to get created reservation: %w", err)
 	}
+
+	//send email
+	go func() {
+		reservationData := utils.ReservationEmailData{
+			ID:            createdReservation.ID.String(),
+			CheckInDate:   createdReservation.CheckInDate,
+			CheckOutDate:  createdReservation.CheckOutDate,
+			RoomNumber:    createdReservation.Room.RoomNumber,
+			RoomType:      createdReservation.Room.RoomType.Name,
+			HotelName:     createdReservation.Room.Hotel.Name,
+			GuestName:     fmt.Sprintf("%s %s", createdReservation.User.FirstName, createdReservation.User.LastName),
+			TotalPrice:    createdReservation.TotalPrice,
+			PaymentStatus: string(createdReservation.Payment.PaymentStatus),
+		}
+
+		err := utils.SendEmailNotification(createdReservation.User.Email, reservationData)
+		if err != nil {
+			// I could add this to something like a queue to retry later
+			// I will log it and continue for now
+			fmt.Println("Failed to send email notification:", err)
+		}
+	}()
+
 	return createdReservation, nil
 }
 
