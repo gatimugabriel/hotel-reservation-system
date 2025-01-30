@@ -103,6 +103,11 @@ func (h *ReservationHandler) CancelReservation(w http.ResponseWriter, r *http.Re
 		utils.RespondError(w, http.StatusInternalServerError, "failed to get reservation: ")
 		return
 	}
+	if reservation.Status == entity.StatusCancelled {
+		utils.RespondJSON(w, http.StatusBadRequest, "Reservation already cancelled")
+		return
+	}
+
 	reservation.Status = entity.StatusCancelled
 
 	updated, err := h.reservationService.UpdateReservation(r.Context(), reservation)
