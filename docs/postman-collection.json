@@ -1,8 +1,10 @@
 {
 	"info": {
-		"_postman_id": "hotel-reservation-system",
+		"_postman_id": "a653a984-406d-47d2-b479-dd0b192444d7",
 		"name": "Hotel Reservation System",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "24249138",
+		"_collection_link": "https://www.postman.com/solar-equinox-291543/workspace/hotel-reservation-system/collection/24249138-a653a984-406d-47d2-b479-dd0b192444d7?action=share&source=collection_link&creator=24249138"
 	},
 	"item": [
 		{
@@ -15,19 +17,16 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"+1234567890\",\n    \"password\": \"StrongPassword123!\"\n}",
+							"raw": "{\n\t\"first_name\": \"Guest\",\n\t\"last_name\": \"Person\",\n\t\"phone\": \"+1234567891\",\n\t\"email\": \"guest@example.com\",\n\t\"password\": \"StrongPass123!\",\n\t\"role\": \"GUEST\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
 								}
 							}
 						},
-						"url": {
-							"raw": "{{base_url}}/auth/register",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "register"]
-						}
-					}
+						"url": "{{base_url}}/auth/signup"
+					},
+					"response": []
 				},
 				{
 					"name": "User Login",
@@ -36,36 +35,16 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"StrongPassword123!\"\n}",
+							"raw": "{\n   \"email\": \"guest@example.com\",\n    \"password\": \"StrongPass123!\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
 								}
 							}
 						},
-						"url": {
-							"raw": "{{base_url}}/auth/login",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "login"]
-						}
-					}
-				},
-				{
-					"name": "Refresh Token",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{refresh_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/auth/refresh",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "refresh"]
-						}
-					}
+						"url": "{{base_url}}/auth/signin"
+					},
+					"response": []
 				}
 			]
 		},
@@ -73,34 +52,67 @@
 			"name": "Hotels",
 			"item": [
 				{
-					"name": "List Hotels",
+					"name": "Create Hotel",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
-						"url": {
-							"raw": "{{base_url}}/hotels?city=New York&country=USA&page=1&limit=10",
-							"host": ["{{base_url}}"],
-							"path": ["hotels"],
-							"query": [
-								{"key": "city", "value": "New York"},
-								{"key": "country", "value": "USA"},
-								{"key": "page", "value": "1"},
-								{"key": "limit", "value": "10"}
-							]
-						}
-					}
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Panari Hotel\",\n\t\"description\": \"A high end 5 start hotel on the suburbs of Nairobi. The hotel...\",\n\t\"address\": \"xyz, Nairobi, Ke\",\n\t\"city\": \"Nairobi\",\n\t\"country\": \"Kenya\",\n\t\"latitude\": -2.8000,\n\t\"longitude\": 36.0000,\n\t\"contact_number\": \"+254700111222\",\n\t\"email\": \"hotel@panari.ke\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/hotel/create-hotel"
+					},
+					"response": []
 				},
 				{
 					"name": "Get Hotel Details",
 					"request": {
 						"method": "GET",
 						"header": [],
+						"url": "{{base_url}}/hotel/hotel-details/7c751b8e-fd53-44e6-ab83-3544be3b53bc"
+					},
+					"response": []
+				},
+				{
+					"name": "List Hotels",
+					"request": {
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{base_url}}/hotels/{{hotel_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["hotels", "{{hotel_id}}"]
+							"raw": "{{base_url}}/hotel/all?city=Nairobi&country=KENYA&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"hotel",
+								"all"
+							],
+							"query": [
+								{
+									"key": "city",
+									"value": "Nairobi"
+								},
+								{
+									"key": "country",
+									"value": "KENYA"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -108,34 +120,133 @@
 			"name": "Rooms",
 			"item": [
 				{
-					"name": "Search Available Rooms",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/rooms/search?check_in=2024-07-15&check_out=2024-07-20&guests=2&hotel_id={{hotel_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["rooms", "search"],
-							"query": [
-								{"key": "check_in", "value": "2024-07-15"},
-								{"key": "check_out", "value": "2024-07-20"},
-								{"key": "guests", "value": "2"},
-								{"key": "hotel_id", "value": "{{hotel_id}}"}
-							]
+					"name": "Room Types",
+					"item": [
+						{
+							"name": "Create Room Type",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"one-bedroom\",\n    \"description\": \"One bedroom bnbs\",\n    \"base_price\": 200.00,\n    \"max_occupancy\": 4,\n    \"num_beds\": 3,\n    \"bed_type\": \"QUEEN\",\n    \"square_meters\": 45.0\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/room/create-type"
+							},
+							"response": []
+						},
+						{
+							"name": "List all types",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/room/type/all"
+							},
+							"response": []
+						},
+						{
+							"name": "TYPE Details",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/room/type-details/c5f1e5d1-24bc-4d7f-97b9-cbbdec5df939"
+							},
+							"response": []
 						}
-					}
+					]
 				},
 				{
-					"name": "Get Room Types",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/room-types",
-							"host": ["{{base_url}}"],
-							"path": ["room-types"]
+					"name": "Room",
+					"item": [
+						{
+							"name": "Search Available Rooms",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/room/available?check_in=2025-02-01&check_out=2025-02-10&hotel_id=7c751b8e-fd53-44e6-ab83-3544be3b53bc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"room",
+										"available"
+									],
+									"query": [
+										{
+											"key": "check_in",
+											"value": "2025-02-01"
+										},
+										{
+											"key": "check_out",
+											"value": "2025-02-10"
+										},
+										{
+											"key": "hotel_id",
+											"value": "7c751b8e-fd53-44e6-ab83-3544be3b53bc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "All Rooms",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/room/all-rooms?hotel_id=7c751b8e-fd53-44e6-ab83-3544be3b53bc",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"room",
+										"all-rooms"
+									],
+									"query": [
+										{
+											"key": "hotel_id",
+											"value": "7c751b8e-fd53-44e6-ab83-3544be3b53bc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Room Details",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": "{{base_url}}/room/room-details/87e5270f-caee-4ed7-ab67-5e02d4ac2b00"
+							},
+							"response": []
+						},
+						{
+							"name": "Create Room",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"room_number\": 120,\n    \"floor_number\": 3,\n    \"hotel_id\": \"7c751b8e-fd53-44e6-ab83-3544be3b53bc\",\n    // \"room_type_id\": \"c9bf9e57-1685-4c89-bafb-ff5af830be8a\",\n    \"room_type\": {\n        \"name\": \"one-bedroom\"\n    },\n    \"is_available\": true,\n    \"under_maintenance\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{base_url}}/room/create-room"
+							},
+							"response": []
 						}
-					}
+					]
 				}
 			]
 		},
@@ -145,50 +256,29 @@
 				{
 					"name": "Create Reservation",
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
+								"value": "Bearer {{access_token}}",
+								"disabled": true
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"room_id\": \"{{room_id}}\",\n    \"check_in_date\": \"2024-07-15\",\n    \"check_out_date\": \"2024-07-20\",\n    \"num_guests\": 2,\n    \"special_requests\": \"Late check-in\"\n}",
+							"raw": "{\n    // \"room_id\": \"123e4567-e89b-12d3-a456-426614175000\",\n    \"room_number\": 103,\n    // \"check_in_date\": \"2025-02-01T00:00:00Z\",\n    // \"check_out_date\": \"2025-02-04T00:00:00Z\",\n    \"check_in_date\": \"2025-02-09\",\n    \"check_out_date\": \"2025-02-10\",\n    \"num_guests\": 2,\n    \"special_request\": \"Late check-in\",\n    \"payment_method\":\"CASH\",\n    \"payment_details\":\"N/A\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
 								}
 							}
 						},
-						"url": {
-							"raw": "{{base_url}}/reservations",
-							"host": ["{{base_url}}"],
-							"path": ["reservations"]
-						}
-					}
-				},
-				{
-					"name": "List User Reservations",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/reservations?status=CONFIRMED&page=1&limit=10",
-							"host": ["{{base_url}}"],
-							"path": ["reservations"],
-							"query": [
-								{"key": "status", "value": "CONFIRMED"},
-								{"key": "page", "value": "1"},
-								{"key": "limit", "value": "10"}
-							]
-						}
-					}
+						"url": "{{base_url}}/reservation/create-reservation"
+					},
+					"response": []
 				},
 				{
 					"name": "Cancel Reservation",
@@ -197,7 +287,8 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
+								"value": "Bearer {{access_token}}",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -209,12 +300,33 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "{{base_url}}/reservations/{{reservation_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["reservations", "{{reservation_id}}"]
-						}
-					}
+						"url": "{{base_url}}/reservation/cancel/4f3fb717-e8ad-499a-840b-32f07fda4ca6"
+					},
+					"response": []
+				},
+				{
+					"name": "List User Reservations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"disabled": true
+							}
+						],
+						"url": "{{base_url}}/reservation/me"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Reservation Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/reservation/reservation-details/d6ec47e4-75b8-40a9-9a07-406d8563f88c"
+					},
+					"response": []
 				}
 			]
 		},
@@ -240,12 +352,9 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "{{base_url}}/payments",
-							"host": ["{{base_url}}"],
-							"path": ["payments"]
-						}
-					}
+						"url": "{{base_url}}/payments"
+					},
+					"response": []
 				},
 				{
 					"name": "Get Payment Details",
@@ -257,25 +366,33 @@
 								"value": "Bearer {{access_token}}"
 							}
 						],
-						"url": {
-							"raw": "{{base_url}}/payments/{{payment_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["payments", "{{payment_id}}"]
-						}
-					}
+						"url": "{{base_url}}/payments/{{payment_id}}"
+					},
+					"response": []
 				}
 			]
 		}
 	],
-	"variable": [
+	"event": [
 		{
-			"key": "base_url",
-			"value": "http://localhost:8080/api/v1"
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
 		},
 		{
-			"key": "access_token",
-			"value": ""
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
 		}
-
 	]
 }
