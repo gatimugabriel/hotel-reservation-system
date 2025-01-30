@@ -78,8 +78,8 @@ package repository
 // 		assert.NoError(t, err)
 // 	}
 
-// 	// Test GetByHotelID
-// 	rooms, err := repo.GetByHotelID(hotelID)
+// 	// Test GetAll
+// 	rooms, err := repo.GetAll(hotelID)
 // 	assert.NoError(t, err)
 // 	assert.Len(t, rooms, 2)
 // }

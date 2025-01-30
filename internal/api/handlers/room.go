@@ -30,7 +30,11 @@ func (h *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rooms, err := h.roomService.GetRooms(r.Context(), id)
+	filters := map[string]interface{}{
+		"hotel_id": id,
+	}
+
+	rooms, err := h.roomService.GetRooms(r.Context(), filters)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to get rooms")
 		return
@@ -44,27 +48,35 @@ func (h *RoomHandler) GetAvailableRooms(w http.ResponseWriter, r *http.Request) 
 	// get dates from query params
 	checkinDate, err := utils.GetDateFromURL(r, "check_in")
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid checkin date")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid checkin date: "+err.Error())
 		return
 	}
 	checkoutDate, err := utils.GetDateFromURL(r, "check_out")
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid checkout date")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid checkout date: "+err.Error())
+		return
+	}
+
+	// Validate check-in/check-out relationship
+	if err := utils.ValidateCheckInCheckOutDates(checkinDate, checkoutDate); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	hotelIDStr := utils.GetParamFromURL(r, "hotel_id")
 	hotelID, err := uuid.Parse(hotelIDStr)
 
-	// get available rooms based on given checkin and checkout dates
-	rooms, err := h.roomService.CheckAvailability(r.Context(), hotelID, checkinDate, checkoutDate)
+	categorizedRooms, err := h.roomService.CheckAvailability(r.Context(), hotelID, checkinDate, checkoutDate)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to get available rooms:"+err.Error())
 		return
 	}
+	if categorizedRooms == nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to get available rooms: "+err.Error())
+		return
+	}
 
-	roomsCount := len(rooms)
-	utils.RespondPaginatedJSON(w, http.StatusOK, rooms, roomsCount, 0000, 0000)
+	utils.RespondJSON(w, http.StatusOK, categorizedRooms)
 }
 
 func (h *RoomHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
@@ -100,46 +112,6 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusCreated, createdRoom)
 }
 
-//func (h *RoomHandler) UpdateRoom(w http.ResponseWriter, r *http.Request) {
-//	idStr := strings.TrimPrefix(r.URL.Path, "/api/v1/rooms/")
-//	id, err := uuid.Parse(idStr)
-//	if err != nil {
-//		utils.RespondError(w, http.StatusBadRequest, "Invalid room ID")
-//		return
-//	}
-//
-//	var roomData entity.Room
-//	if err := json.NewDecoder(r.Body).Decode(&roomData); err != nil {
-//		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
-//		return
-//	}
-//
-//	updatedRoom, err := h.roomService.UpdateRoom(r.Context(), id, &roomData)
-//	if err != nil {
-//		utils.RespondError(w, http.StatusInternalServerError, "Failed to update room")
-//		return
-//	}
-//
-//	utils.RespondJSON(w, http.StatusOK, updatedRoom)
-//}
-//
-//func (h *RoomHandler) DeleteRoom(w http.ResponseWriter, r *http.Request) {
-//	idStr := strings.TrimPrefix(r.URL.Path, "/api/v1/rooms/")
-//	id, err := uuid.Parse(idStr)
-//	if err != nil {
-//		utils.RespondError(w, http.StatusBadRequest, "Invalid room ID")
-//		return
-//	}
-//
-//	err = h.roomService.DeleteRoom(r.Context(), id)
-//	if err != nil {
-//		utils.RespondError(w, http.StatusInternalServerError, "Failed to delete room")
-//		return
-//	}
-//
-//	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Room deleted successfully"})
-//}
-
 // ___ Room Types____//
 
 // CreateRoomType creates a new room type
@@ -153,6 +125,7 @@ func (h *RoomHandler) CreateRoomType(w http.ResponseWriter, r *http.Request) {
 	//Sanitize & ValidateStruct
 	if validationErrors := input.ValidateStruct(roomData); validationErrors != nil {
 		utils.RespondJSON(w, http.StatusBadRequest, validationErrors)
+		return
 	}
 
 	createdRoomType, err := h.roomTypeService.CreateRoomType(r.Context(), &roomData)
@@ -161,7 +134,6 @@ func (h *RoomHandler) CreateRoomType(w http.ResponseWriter, r *http.Request) {
 			utils.RespondError(w, status, message)
 			return
 		}
-
 		// default
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room type:"+err.Error())
 		return

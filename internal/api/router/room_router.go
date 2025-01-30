@@ -4,6 +4,7 @@ import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/handlers"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/middleware"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
+	reservationRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/services"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/infrastructure/database"
@@ -17,7 +18,9 @@ import (
 func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	roomRepo := repository.NewRoomRepository(db)
 	roomTypeRepo := repository.NewRoomTypeRepository(db)
-	roomService := services.NewRoomService(roomRepo, roomTypeRepo)
+	reservationRepo := reservationRepository.NewReservationRepository(db)
+
+	roomService := services.NewRoomService(roomRepo, roomTypeRepo, reservationRepo)
 	roomTypeService := services.NewRoomTypeService(roomTypeRepo)
 	handler := handlers.NewRoomHandler(roomService, roomTypeService)
 
@@ -49,9 +52,9 @@ func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 
 	//___Public routes ___//
 	//1. rooms
-	r.HandleFunc("GET /room-details/{roomID}", handler.GetRoom)
 	r.HandleFunc("GET /available", handler.GetAvailableRooms)
 	r.HandleFunc("GET /all-rooms", handler.GetRooms)
+	r.HandleFunc("GET /room-details/{roomID}", handler.GetRoom)
 
 	//2. room types
 	r.HandleFunc("GET /type-details/{roomTypeID}", handler.GetTypeDetails)

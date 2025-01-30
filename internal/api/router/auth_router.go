@@ -19,8 +19,8 @@ func RegisterAuthRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 
 	r.HandleFunc("POST /signup", handler.SignUp)
 	r.HandleFunc("POST /signin", handler.Login)
-	//r.HandleFunc("POST /signout", tokenHandler.SignOut)
-	//r.HandleFunc("POST /refresh", handler.RefreshToken)
+	//r.HandleFunc("POST /signout", handler.SignOut)
+	//r.HandleFunc("GET /refresh", handler.RefreshToken)
 
 	return http.StripPrefix("/api/v1/auth", r)
 }

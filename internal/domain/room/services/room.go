@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	reservationRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/google/uuid"
@@ -14,39 +15,54 @@ type RoomService interface {
 	UpdateRoom(ctx context.Context, id uuid.UUID, room *entity.Room) (*entity.Room, error)
 	DeleteRoom(ctx context.Context, id uuid.UUID) error
 
-	MarkRoomMaintenance(ctx context.Context, id uuid.UUID, maintenance bool) error
-
-	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error)
-	GetRooms(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error)
+	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) (map[string][]*entity.Room, error)
+	GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error)
 	GetRoom(ctx context.Context, id string) (*entity.Room, error)
 }
 
 type RoomServiceImpl struct {
-	roomRepo     repository.RoomRepository
-	roomTypeRepo repository.RoomTypeRepository
+	roomRepo        repository.RoomRepository
+	roomTypeRepo    repository.RoomTypeRepository
+	reservationRepo reservationRepository.ReservationRepository
 }
 
-func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.RoomTypeRepository) *RoomServiceImpl {
+func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.RoomTypeRepository, reservationRepo reservationRepository.ReservationRepository) *RoomServiceImpl {
 	return &RoomServiceImpl{
-		roomRepo:     roomRepo,
-		roomTypeRepo: roomTypeRepo,
+		roomRepo:        roomRepo,
+		roomTypeRepo:    roomTypeRepo,
+		reservationRepo: reservationRepo,
 	}
+}
+
+func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
+	rooms, err := r.roomRepo.GetAvailableRooms(ctx, hotelID, checkIn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get available rooms: %w", err)
+	}
+
+	// Categorize rooms by their type
+	categorizedRooms := make(map[string][]*entity.Room)
+	for _, room := range rooms {
+		roomType := room.RoomType.Name
+		categorizedRooms[roomType] = append(categorizedRooms[roomType], room)
+	}
+
+	return categorizedRooms, nil
 }
 
 func (r *RoomServiceImpl) CreateRoom(ctx context.Context, room *entity.Room) (*entity.Room, error) {
 	// If RoomTypeID is not provided, look it up by RoomTypeName
-	if room.RoomTypeID == uuid.Nil && room.RoomTypeInfo.Name != "" {
-		roomType, err := r.roomTypeRepo.GetByName(ctx, room.RoomTypeInfo.Name)
+	if room.RoomTypeID == uuid.Nil && room.RoomType.Name != "" {
+		roomType, err := r.roomTypeRepo.GetByName(ctx, room.RoomType.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get room type by name: %w", err)
 		}
 		if roomType == nil {
-			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomTypeInfo.Name)
+			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomType.Name)
 		}
 		room.RoomTypeID = roomType.ID
 	}
 
-	// Validate that RoomTypeID is set
 	if room.RoomTypeID == uuid.Nil {
 		return nil, fmt.Errorf("room type ID or name is required")
 	}
@@ -58,73 +74,24 @@ func (r *RoomServiceImpl) CreateRoom(ctx context.Context, room *entity.Room) (*e
 	return room, nil
 }
 
-func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) ([]*entity.Room, error) {
-	//// Get all rooms for the hotel
-	//rooms, err := r.roomRepo.GetByHotelID(ctx, hotelID)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to get rooms: %w", err)
-	//}
-
-	//// Get reservations for the date range
-	//reservations, err := r.roomRepo.GetReservationsForDateRange(ctx, checkIn, checkOut)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to get reservations: %w", err)
-	//}
-	//
-	//// Create a map of reserved room IDs
-	//reservedRooms := make(map[uuid.UUID]bool)
-	//for _, reservation := range reservations {
-	//	reservedRooms[reservation.ID] = true
-	//}
-	//
-	//// Filter available rooms
-	//var availableRooms []*entity.Room
-	//for _, room := range rooms {
-	//	if !reservedRooms[room.ID] && !room.IsMaintenance {
-	//		availableRooms = append(availableRooms, room)
-	//	}
-	//}
-	//
-	//return availableRooms, nil
-
-	rooms, err := r.roomRepo.GetAvailableRooms(ctx, hotelID, checkIn, checkOut)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get available rooms: %w", err)
-	}
-
-	return rooms, nil
-}
-
-func (r *RoomServiceImpl) MarkRoomMaintenance(ctx context.Context, id uuid.UUID, maintenance bool) error {
-	room, err := r.roomRepo.GetByID(ctx, id)
-	if err != nil {
-		return fmt.Errorf("failed to get room: %w", err)
-	}
-
-	room.IsMaintenance = maintenance
-	room.UpdatedAt = time.Now()
-
-	if err := r.roomRepo.Update(ctx, room); err != nil {
-		return fmt.Errorf("failed to update room maintenance status: %w", err)
-	}
-	return nil
-}
-
 func (r *RoomServiceImpl) GetRoom(ctx context.Context, id string) (*entity.Room, error) {
 	roomID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid room ID: %w", err)
 	}
 
-	room, err := r.roomRepo.GetByID(ctx, roomID)
+	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"id": roomID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get room: %w", err)
 	}
-	return room, nil
+	if len(rooms) == 0 {
+		return nil, nil
+	}
+	return rooms[0], nil
 }
 
-func (r *RoomServiceImpl) GetRooms(ctx context.Context, hotelID uuid.UUID) ([]*entity.Room, error) {
-	rooms, err := r.roomRepo.GetByHotelID(ctx, hotelID)
+func (r *RoomServiceImpl) GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error) {
+	rooms, err := r.roomRepo.GetRooms(ctx, filters)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rooms: %w", err)
 	}
@@ -133,12 +100,15 @@ func (r *RoomServiceImpl) GetRooms(ctx context.Context, hotelID uuid.UUID) ([]*e
 }
 
 func (r *RoomServiceImpl) UpdateRoom(ctx context.Context, id uuid.UUID, room *entity.Room) (*entity.Room, error) {
-	existingRoom, err := r.roomRepo.GetByID(ctx, id)
+	existingRoom, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"id": id})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get room: %w", err)
 	}
+	if len(existingRoom) == 0 {
+		return nil, fmt.Errorf("room not found")
+	}
 
-	room.ID = existingRoom.ID
+	room.ID = existingRoom[0].ID
 	room.UpdatedAt = time.Now()
 
 	if err := r.roomRepo.Update(ctx, room); err != nil {
