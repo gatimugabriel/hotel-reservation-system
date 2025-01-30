@@ -25,5 +25,22 @@ func ParseDate(dateStr string) (time.Time, error) {
 // GetDateFromURL combines getting param and parsing date
 func GetDateFromURL(r *http.Request, paramName string) (time.Time, error) {
 	dateStr := GetParamFromURL(r, paramName)
-	return ParseDate(dateStr)
+	//return ParseDate(dateStr)
+
+	date, err := ParseDate(dateStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// validate check_in date (must start today)
+	if paramName == "check_in" {
+		today := time.Now()
+		today = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+
+		if date.Before(today) {
+			return time.Time{}, fmt.Errorf("check-in date should start today onwards")
+		}
+	}
+
+	return date, nil
 }
