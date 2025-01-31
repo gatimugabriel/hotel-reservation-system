@@ -83,7 +83,6 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 			CheckOutDate:  createdReservation.CheckOutDate,
 			RoomNumber:    createdReservation.Room.RoomNumber,
 			RoomType:      createdReservation.Room.RoomType.Name,
-			HotelName:     createdReservation.Room.Hotel.Name,
 			GuestName:     fmt.Sprintf("%s %s", createdReservation.User.FirstName, createdReservation.User.LastName),
 			TotalPrice:    createdReservation.TotalPrice,
 			PaymentStatus: string(createdReservation.Payment.PaymentStatus),

@@ -14,7 +14,7 @@ import (
 // RoomRepository : data persistence database interaction interface
 type RoomRepository interface {
 	GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error)
-	GetAvailableRooms(ctx context.Context, hotelID uuid.UUID, checkIn time.Time) ([]*entity.Room, error)
+	GetAvailableRooms(ctx context.Context, checkIn time.Time) ([]*entity.Room, error)
 
 	Create(ctx context.Context, room *entity.Room) error
 	Update(ctx context.Context, room *entity.Room) error
@@ -37,7 +37,6 @@ func (repo *RoomRepositoryImpl) GetRooms(ctx context.Context, filters map[string
 	var rooms []*entity.Room
 
 	query := repo.db.WithContext(ctx).
-		Preload("Hotel").
 		Preload("RoomType")
 
 	for key, value := range filters {
@@ -54,13 +53,12 @@ func (repo *RoomRepositoryImpl) GetRooms(ctx context.Context, filters map[string
 
 // GetAvailableRooms fetches available rooms that are available as the from given date
 // looks similar to GetRooms above but due query needs , I decided to keep it this way
-func (repo *RoomRepositoryImpl) GetAvailableRooms(ctx context.Context, hotelID uuid.UUID, checkIn time.Time) ([]*entity.Room, error) {
+func (repo *RoomRepositoryImpl) GetAvailableRooms(ctx context.Context, checkIn time.Time) ([]*entity.Room, error) {
 	var rooms []*entity.Room
 
 	err := repo.db.WithContext(ctx).
-		Preload("Hotel").
 		Preload("RoomType").
-		Where("hotel_id = ? AND under_maintenance = ? AND (is_available = ? OR available_from <= ?)", hotelID, false, true, checkIn).
+		Where("under_maintenance = ? AND (is_available = ? OR available_from <= ?)", false, true, checkIn).
 		Find(&rooms).Error
 
 	if err != nil {

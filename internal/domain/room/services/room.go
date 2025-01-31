@@ -15,7 +15,7 @@ type RoomService interface {
 	UpdateRoom(ctx context.Context, id uuid.UUID, room *entity.Room) (*entity.Room, error)
 	DeleteRoom(ctx context.Context, id uuid.UUID) error
 
-	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) (map[string][]*entity.Room, error)
+	CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error)
 	GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error)
 	GetRoom(ctx context.Context, id string) (*entity.Room, error)
 }
@@ -34,8 +34,8 @@ func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.
 	}
 }
 
-func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
-	rooms, err := r.roomRepo.GetAvailableRooms(ctx, hotelID, checkIn)
+func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
+	rooms, err := r.roomRepo.GetAvailableRooms(ctx, checkIn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get available rooms: %w", err)
 	}

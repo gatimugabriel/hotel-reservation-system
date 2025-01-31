@@ -13,7 +13,6 @@ type ReservationEmailData struct {
 	CheckOutDate  time.Time `json:"check_out_date"`
 	RoomNumber    int       `json:"room_number"`
 	RoomType      string    `json:"room_type"`
-	HotelName     string    `json:"hotel_name"`
 	GuestName     string    `json:"guest_name"`
 	TotalPrice    float64   `json:"total_price"`
 	PaymentStatus string    `json:"payment_status"`
@@ -52,7 +51,7 @@ func SendEmailNotification(email string, reservationData ReservationEmailData) e
             
             <div style="padding: 20px 0;">
                 <p style="font-size: 16px; color: #333;">Dear %s,</p>
-                <p style="font-size: 16px; color: #333;">Thank you for choosing %s. Your reservation has been confirmed!</p>
+                <p style="font-size: 16px; color: #333;">Thank you for choosing Arch Hotel. Your reservation has been confirmed!</p>
                 
                 <div style="background-color: #f8f9fa; padding: 20px; border-radius: 4px; margin: 20px 0;">
                     <h2 style="color: #2e6c80; font-size: 18px; margin-top: 0;">Reservation Details</h2>
@@ -126,9 +125,9 @@ func SendEmailNotification(email string, reservationData ReservationEmailData) e
 		htmlTemplate,
 		from,
 		to,
-		reservationData.HotelName,
+		//reservationData.HotelName,
 		reservationData.GuestName,
-		reservationData.HotelName,
+		//reservationData.HotelName,
 		reservationData.ID,
 		formatDate(reservationData.CheckInDate),
 		formatDate(reservationData.CheckOutDate),
@@ -138,7 +137,7 @@ func SendEmailNotification(email string, reservationData ReservationEmailData) e
 		paymentStatusColor,
 		reservationData.PaymentStatus,
 		reservationDetailsUrl,
-		reservationData.HotelName,
+		//reservationData.HotelName,
 		os.Getenv("HOTEL_CONTACT"),
 		os.Getenv("HOTEL_CONTACT"),
 		os.Getenv("HOTEL_EMAIL"),
