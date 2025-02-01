@@ -28,9 +28,9 @@ run:
 	@echo "Starting server..."
 	@go run cmd/app/main.go
 
-#Boot up all containers
+#Boot up containers
 docker-up:
-	@if docker compose up --build 2>/dev/null; then \
+	@if docker compose up --build  2>/dev/null; then \
   		: ; \
   	else \
   	  echo "Using docker compose version 1"; \
