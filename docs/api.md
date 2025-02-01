@@ -1,9 +1,15 @@
 # API Documentation
 
 ## Base URL
+
 ```
-https://api.hotelreservation.gabu/v1
+https://hrs-nexus.onrender.com/api/v1
 ```
+For localhost, use ```http://localhost:8080/api/v1```
+
+
+## POSTMAN WORKSPACE
+You can also import the get the postman collection in this dir for better view of all endpoints
 
 ## Authentication
 API endpoints that require auth use an issued accessToken(JWT) during signin. These endpoints are marked to help you know they require auth

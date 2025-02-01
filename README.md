@@ -1,7 +1,7 @@
 # Hotel Reservation System
 
 ## Overview
-This is a comprehensive hotel reservation system built with Go and PostgreSQL. The system provides functionalities for room booking, user management, payments processing, and notifications.
+This system is built raw Golang and PostgreSQL (Using GORM as the ORM). The system provides functionalities for room booking, user management, payments, and simple notifications.
 
 ## Table of Contents
 - [Hotel Reservation System](#hotel-reservation-system)
@@ -17,19 +17,16 @@ This is a comprehensive hotel reservation system built with Go and PostgreSQL. T
   - [Database Schema](#database-schema)
   - [Development Guidelines](#development-guidelines)
   - [Testing](#testing)
-  - [Deployment](#deployment)
 
 ## Architecture
 ![Architecture Diagram](docs/images/architecture.png)
 
-The system follows a domain driven design (DDD) architecture with the following components:
-- **API**: Handles routing and authentication
-- **User Service**: Manages user accounts and authentication
-- **Booking Service**: Handles room reservations and availability
-- **Hotel Service**: Handles hotel
-- **Payment Service**: Processes payments 
-- **Notification Service**: Manages email and SMS(to be added later) notifications
-- **Room Inventory Service**: Manages room types and availability
+The system follows a domain driven design (DDD) architecture with the following components and domains:
+- **API Component**: Handles routing and authentication
+- **User Domain**: Manages user accounts and authentication
+- **Room Domain**: Handles room(and room types also) functionalities (CRUD)
+- **Reservation(Booking) Domain**: Handles room reservations and availability
+- **Payment Service**: payments handling 
 
 ## Code Structure
 As explained above, the system adopts a domain driven design where each domain has its own entities(model(s) definition), repository(for database interaction & data persistence), service(business logic) 
@@ -40,6 +37,7 @@ As explained above, the system adopts a domain driven design where each domain h
 
 The structure
 ```plaintext
+
 .
 ├── cmd
 │   └── app
@@ -51,12 +49,11 @@ The structure
 │   │   ├── middleware
 │   │   └── router
 │   ├── config
+│   ├── constants
 │   ├── domain
-│   │   ├── hotel
-│   │   │   ├── entity
-│   │   │   ├── repository
-│   │   │   └── services
 │   │   ├── payment
+│   │   │   ├── entity
+│   │   │   └── repository
 │   │   ├── reservation
 │   │   │   ├── entity
 │   │   │   ├── repository
@@ -75,8 +72,10 @@ The structure
 │   │       └── sql
 │   └── server
 │       └── httpServer
-└── pkg
-    └── utils
+├── pkg
+│   └── utils
+│       └── input
+
 
 ```
 
@@ -85,14 +84,12 @@ The structure
 - User Authentication and Authorization
 - Room Availability Check
 - Room Booking Management
-- Payment Processing
-- Email/SMS Notifications
-- Admin Dashboard
-- Booking History
-- Room Inventory Management
+- Payment details capturing
+- Email Notifications for bookings
+- Booking(Reservation) History
 
 ## Prerequisites
-- Go 1.19+
+- Go 1.19+ (if using docker to run, no need to have this)
 - PostgreSQL 14+
 - Docker & Docker Compose (for containerized setup)
 - Make (optional, for using Makefile commands)
@@ -109,7 +106,7 @@ cd hotel-reservation-system
 2. Set up the database
 ```bash
 psql -U postgres
-CREATE DATABASE hotel_reservation;
+CREATE DATABASE hrs;
 ```
 
 3. Configure environment variables
@@ -120,17 +117,18 @@ cp .env.example .env
 
 4. Install dependencies
 ```bash
-go mod download
-```
-
-5. Run migrations
-```bash
-make migrate-up
+go mod tidy && go mod download
 ```
 
 6. Start the server
 ```bash
+make build 
 make run
+```
+
+To have includes live reloading capabilities, run:
+```bash
+make watch 
 ```
 
 ### Docker Setup
@@ -142,7 +140,11 @@ cd hotel-reservation-system
 
 2. Build and run with Docker Compose
 ```bash
-docker-compose up --build
+docker-compose up --build 
+```
+OR
+```bash
+make docker-up
 ```
 
 The application will be available at `http://localhost:8080`
@@ -162,11 +164,6 @@ Please refer to [docs/development.md](docs/development.md) for coding standards,
 make test
 
 # Run specific tests
-go test ./... -run TestNameHere
+go test ./... -run <nameOfTest>
 
-# Run with coverage
-make test-coverage
 ```
-
-## Deployment
-Deployment instructions and considerations can be found in [docs/deployment.md](docs/deployment.md)
