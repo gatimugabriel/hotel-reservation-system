@@ -3,18 +3,15 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/infrastructure/database"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"time"
 )
 
 // RoomRepository : data persistence database interaction interface
 type RoomRepository interface {
 	GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error)
-	GetAvailableRooms(ctx context.Context, checkIn time.Time) ([]*entity.Room, error)
 
 	Create(ctx context.Context, room *entity.Room) error
 	Update(ctx context.Context, room *entity.Room) error
@@ -32,7 +29,7 @@ func NewRoomRepository(db *database.Service) *RoomRepositoryImpl {
 	}
 }
 
-// GetRooms can get single or multiple rooms that mat the given filters
+// GetRooms can get single or multiple rooms that match the given filters
 func (repo *RoomRepositoryImpl) GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error) {
 	var rooms []*entity.Room
 
@@ -46,23 +43,6 @@ func (repo *RoomRepositoryImpl) GetRooms(ctx context.Context, filters map[string
 	err := query.Find(&rooms).Error
 	if err != nil {
 		return nil, err
-	}
-
-	return rooms, nil
-}
-
-// GetAvailableRooms fetches available rooms that are available as the from given date
-// looks similar to GetRooms above but due query needs , I decided to keep it this way
-func (repo *RoomRepositoryImpl) GetAvailableRooms(ctx context.Context, checkIn time.Time) ([]*entity.Room, error) {
-	var rooms []*entity.Room
-
-	err := repo.db.WithContext(ctx).
-		Preload("RoomType").
-		Where("under_maintenance = ? AND (is_available = ? OR available_from <= ?)", false, true, checkIn).
-		Find(&rooms).Error
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get available rooms: %w", err)
 	}
 
 	return rooms, nil
