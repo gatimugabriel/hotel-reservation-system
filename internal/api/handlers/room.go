@@ -93,7 +93,7 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// default
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room:"+err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

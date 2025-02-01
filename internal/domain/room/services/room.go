@@ -60,6 +60,8 @@ func (r *RoomServiceImpl) CreateRoom(ctx context.Context, room *entity.Room) (*e
 		if roomType == nil {
 			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomType.Name)
 		}
+
+		room.RoomType.ID = roomType.ID
 		room.RoomTypeID = roomType.ID
 	}
 
