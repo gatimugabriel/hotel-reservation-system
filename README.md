@@ -19,7 +19,8 @@ This system is built raw Golang and PostgreSQL (Using GORM as the ORM). The syst
   - [Testing](#testing)
 
 ## Architecture
-![Architecture Diagram](docs/images/architecture.png)
+
+[//]: # (![Architecture Diagram]&#40;docs/images/architecture.png&#41;)
 
 The system follows a domain driven design (DDD) architecture with the following components and domains:
 - **API Component**: Handles routing and authentication

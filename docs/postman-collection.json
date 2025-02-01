@@ -35,7 +35,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n   \"email\": \"manager@example.com\",\n    \"password\": \"StrongPass123!\"\n}",
+							"raw": "{\n   \"email\": \"guest@example.com\",\n    \"password\": \"StrongPass123!\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -132,22 +132,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": {
-									"raw": "{{base_url}}/room/all-rooms?hotel_id=7c751b8e-fd53-44e6-ab83-3544be3b53bc",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"room",
-										"all-rooms"
-									],
-									"query": [
-										{
-											"key": "hotel_id",
-											"value": "7c751b8e-fd53-44e6-ab83-3544be3b53bc"
-										}
-									]
-								}
+								"url": "{{base_url}}/room/all-rooms"
 							},
 							"response": []
 						},
@@ -156,7 +141,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "{{base_url}}/room/room-details/a5b82b4a-c55f-49b8-9c52-16890f0d85bd"
+								"url": "{{base_url}}/room/room-details/3a5352f9-9d5e-4b62-90d7-7d31d4a741a2"
 							},
 							"response": []
 						},
@@ -201,7 +186,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    // \"room_id\": \"123e4567-e89b-12d3-a456-426614175000\",\n    \"room_number\": 118,\n    // \"check_in_date\": \"2025-02-01T00:00:00Z\",\n    // \"check_out_date\": \"2025-02-04T00:00:00Z\",\n    \"check_in_date\": \"2025-02-23\",\n    \"check_out_date\": \"2025-02-25\",\n    \"num_guests\": 1,\n    \"special_request\": \"N/A\",\n    \"payment_method\":\"CRYPTO\",\n    \"payment_details\":\"N/A\"\n}",
+							"raw": "{\n    // \"room_id\": \"123e4567-e89b-12d3-a456-426614175000\",\n    \"room_number\": 120,\n    // \"check_in_date\": \"2025-02-01T00:00:00Z\",\n    // \"check_out_date\": \"2025-02-04T00:00:00Z\",\n    \"check_in_date\": \"2025-02-23\",\n    \"check_out_date\": \"2025-02-25\",\n    \"num_guests\": 1,\n    \"special_request\": \"late check-in\",\n    \"payment_method\":\"CRYPTO\",\n    \"payment_details\":\"somedetails\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -232,7 +217,7 @@
 								}
 							}
 						},
-						"url": "{{base_url}}/reservation/cancel/4f3fb717-e8ad-499a-840b-32f07fda4ca6"
+						"url": "{{base_url}}/reservation/cancel/2055f7f1-f1bd-4b4f-96b3-96e3718d64fe"
 					},
 					"response": []
 				},
@@ -256,7 +241,7 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "{{base_url}}/reservation/reservation-details/d6ec47e4-75b8-40a9-9a07-406d8563f88c"
+						"url": "{{base_url}}/reservation/reservation-details/2055f7f1-f1bd-4b4f-96b3-96e3718d64fe"
 					},
 					"response": []
 				}
