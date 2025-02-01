@@ -26,9 +26,16 @@ var (
 
 // NewDatabaseService creates and configures a new database connection
 func NewDatabaseService(cfg *config.Config) (*Service, error) {
+	// switch ssl mode depending on server environment
+	if cfg.Server.Environment == "production" {
+		cfg.Database.SSLMode = "require"
+	} else {
+		cfg.Database.SSLMode = "disable"
+	}
+
 	once.Do(func() {
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-			cfg.Database.Host, cfg.Database.User, cfg.Database.Password, cfg.Database.Name, cfg.Database.Port)
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=UTC",
+			cfg.Database.Host, cfg.Database.User, cfg.Database.Password, cfg.Database.Name, cfg.Database.Port, cfg.Database.SSLMode)
 
 		gormConfig := &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Info),

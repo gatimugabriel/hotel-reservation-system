@@ -5,7 +5,7 @@ services:
     container_name: HRS-DB
     image: postgres:latest
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_USER}

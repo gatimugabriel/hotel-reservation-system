@@ -23,6 +23,7 @@ type DatabaseConfig struct {
 	Password string
 	Name     string
 	Port     string
+	SSLMode  string
 }
 
 type AuthConfig struct {
@@ -31,6 +32,7 @@ type AuthConfig struct {
 }
 
 type ServerConfig struct {
+	Environment    string
 	Port           string
 	AllowedOrigins []string
 	BaseURL        string
@@ -67,13 +69,15 @@ func LoadConfig() (*Config, error) {
 				Password: os.Getenv("DB_PASSWORD"),
 				Name:     os.Getenv("DB_NAME"),
 				Port:     os.Getenv("DB_PORT"),
+				SSLMode:  "", // this field is set depending on the server environment
 			},
 			Auth: AuthConfig{
 				AccessTokenSecret:  os.Getenv("JWT_ACCESS_SECRET"),
 				RefreshTokenSecret: os.Getenv("JWT_REFRESH_SECRET"),
 			},
 			Server: ServerConfig{
-				Port: os.Getenv("PORT"),
+				Environment: os.Getenv("SERVER_ENVIRONMENT"),
+				Port:        os.Getenv("PORT"),
 				AllowedOrigins: []string{
 					os.Getenv("MOBILE_CLIENT_ORIGIN"),
 					os.Getenv("WEBSITE_CLIENT_ORIGIN"),
