@@ -8,27 +8,34 @@ services:
       - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_USER}
-      POSTGRES_DB: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - hrs_data:/var/lib/postgresql/data
     networks:
       - "hrs.network"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
     build: .
     env_file:
       - .env
     ports:
-      - "8080"
+      - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: on-failure
     networks:
       - "hrs.network"
-    deploy:
-      replicas: 3
+#    deploy:
+#      replicas: 3
 
+  # reverse proxy
 #  nginx:
 #    image: nginx:latest
 #    volumes:

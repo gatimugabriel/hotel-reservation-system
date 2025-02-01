@@ -10,8 +10,6 @@ import (
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
 	"github.com/google/uuid"
-	"log"
-	"time"
 )
 
 type ReservationService interface {
@@ -44,38 +42,23 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 		return nil, err
 	}
 
+	// Create the payment record
 	if err := r.paymentRepo.Create(ctx, &reservation.Payment); err != nil {
 		return nil, fmt.Errorf("failed to create payment: %w", err)
 	}
 
+	// Create the reservation
 	if err := r.reservationRepo.Create(ctx, reservation); err != nil {
 		return nil, fmt.Errorf("failed to create reservation: %w", err)
 	}
 
-	// Mark room as unavailable
-	go func() {
-		ctx := context.Background()
-		rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"id": reservation.RoomID})
-		if err != nil || len(rooms) == 0 {
-			log.Printf("Failed to get room: %v", err)
-			return
-		}
-
-		room := rooms[0]
-		room.IsAvailable = false
-		room.AvailableFrom = reservation.CheckOutDate
-
-		if err := r.roomRepo.Update(ctx, room); err != nil {
-			log.Printf("Failed to update room availability: %v", err)
-		}
-	}()
-
+	// Fetch the created reservation with preloaded associations
 	createdReservation, err := r.reservationRepo.GetByID(ctx, reservation.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get created reservation: %w", err)
 	}
 
-	//send email
+	// Send email notification
 	go func() {
 		reservationData := utils.ReservationEmailData{
 			ID:            createdReservation.ID.String(),
@@ -83,7 +66,6 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 			CheckOutDate:  createdReservation.CheckOutDate,
 			RoomNumber:    createdReservation.Room.RoomNumber,
 			RoomType:      createdReservation.Room.RoomType.Name,
-			HotelName:     createdReservation.Room.Hotel.Name,
 			GuestName:     fmt.Sprintf("%s %s", createdReservation.User.FirstName, createdReservation.User.LastName),
 			TotalPrice:    createdReservation.TotalPrice,
 			PaymentStatus: string(createdReservation.Payment.PaymentStatus),
@@ -91,8 +73,6 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, reservat
 
 		err := utils.SendEmailNotification(createdReservation.User.Email, reservationData)
 		if err != nil {
-			// I could add this to something like a queue to retry later
-			// I will log it and continue for now
 			fmt.Println("Failed to send email notification:", err)
 		}
 	}()
@@ -124,6 +104,7 @@ func (r *ReservationServiceImpl) GetReservation(ctx context.Context, id uuid.UUI
 	return reservation, nil
 }
 
+// GetRoomByNumber returns a room with the given number
 func (r *ReservationServiceImpl) GetRoomByNumber(ctx context.Context, roomNumber int) (*roomEntity.Room, error) {
 	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"room_number": roomNumber})
 	if err != nil {
@@ -156,11 +137,6 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 	room := rooms[0]
 	if room.UnderMaintenance {
 		return fmt.Errorf("room has been marked under maintenance")
-	}
-
-	// Check if the room is available for the given dates
-	if !room.IsAvailable && room.AvailableFrom.After(reservation.CheckInDate) {
-		return fmt.Errorf("room is not available until %s", room.AvailableFrom.Format(time.RFC3339))
 	}
 
 	return nil

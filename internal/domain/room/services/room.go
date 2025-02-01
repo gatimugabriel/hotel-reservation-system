@@ -7,6 +7,7 @@ import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/google/uuid"
+	"log"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type RoomService interface {
 	UpdateRoom(ctx context.Context, id uuid.UUID, room *entity.Room) (*entity.Room, error)
 	DeleteRoom(ctx context.Context, id uuid.UUID) error
 
-	CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) (map[string][]*entity.Room, error)
+	CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error)
 	GetRooms(ctx context.Context, filters map[string]interface{}) ([]*entity.Room, error)
 	GetRoom(ctx context.Context, id string) (*entity.Room, error)
 }
@@ -34,15 +35,54 @@ func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.
 	}
 }
 
-func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, hotelID uuid.UUID, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
-	rooms, err := r.roomRepo.GetAvailableRooms(ctx, hotelID, checkIn)
+//func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
+//	rooms, err := r.roomRepo.GetAvailableRooms(ctx, checkIn)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to get available rooms: %w", err)
+//	}
+//
+//	// Categorize rooms by their type
+//	categorizedRooms := make(map[string][]*entity.Room)
+//	for _, room := range rooms {
+//		roomType := room.RoomType.Name
+//		categorizedRooms[roomType] = append(categorizedRooms[roomType], room)
+//	}
+//
+//	return categorizedRooms, nil
+//}
+
+func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
+	// Fetch all rooms that are not under maintenance
+	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"under_maintenance": false})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get available rooms: %w", err)
+		return nil, fmt.Errorf("failed to get rooms: %w", err)
+	}
+
+	log.Println("rooms under no maintenance count", len(rooms))
+
+	// Fetch reservations that overlap with the given date range
+	reservations, err := r.reservationRepo.GetByDateRange(ctx, checkIn, checkOut)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get reservations: %w", err)
+	}
+
+	// Create a map of room IDs that are already reserved
+	reservedRoomIDs := make(map[uuid.UUID]bool)
+	for _, reservation := range reservations {
+		reservedRoomIDs[reservation.RoomID] = true
+	}
+
+	// Filter out rooms that are already reserved
+	var availableRooms []*entity.Room
+	for _, room := range rooms {
+		if !reservedRoomIDs[room.ID] {
+			availableRooms = append(availableRooms, room)
+		}
 	}
 
 	// Categorize rooms by their type
 	categorizedRooms := make(map[string][]*entity.Room)
-	for _, room := range rooms {
+	for _, room := range availableRooms {
 		roomType := room.RoomType.Name
 		categorizedRooms[roomType] = append(categorizedRooms[roomType], room)
 	}
@@ -60,6 +100,8 @@ func (r *RoomServiceImpl) CreateRoom(ctx context.Context, room *entity.Room) (*e
 		if roomType == nil {
 			return nil, fmt.Errorf("room type with name '%s' not found", room.RoomType.Name)
 		}
+
+		room.RoomType.ID = roomType.ID
 		room.RoomTypeID = roomType.ID
 	}
 

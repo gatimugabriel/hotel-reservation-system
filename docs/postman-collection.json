@@ -17,7 +17,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"first_name\": \"Guest\",\n\t\"last_name\": \"Person\",\n\t\"phone\": \"+1234567891\",\n\t\"email\": \"guest@example.com\",\n\t\"password\": \"StrongPass123!\",\n\t\"role\": \"GUEST\"\n}",
+							"raw": "{\n\t\"first_name\": \"Manager\",\n\t\"last_name\": \"Person\",\n\t\"phone\": \"+1234567892\",\n\t\"email\": \"manager@example.com\",\n\t\"password\": \"StrongPass123!\",\n\t\"role\": \"MANAGER\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -43,74 +43,6 @@
 							}
 						},
 						"url": "{{base_url}}/auth/signin"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Hotels",
-			"item": [
-				{
-					"name": "Create Hotel",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\t\"name\": \"Panari Hotel\",\n\t\"description\": \"A high end 5 start hotel on the suburbs of Nairobi. The hotel...\",\n\t\"address\": \"xyz, Nairobi, Ke\",\n\t\"city\": \"Nairobi\",\n\t\"country\": \"Kenya\",\n\t\"latitude\": -2.8000,\n\t\"longitude\": 36.0000,\n\t\"contact_number\": \"+254700111222\",\n\t\"email\": \"hotel@panari.ke\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "{{base_url}}/hotel/create-hotel"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Hotel Details",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": "{{base_url}}/hotel/hotel-details/7c751b8e-fd53-44e6-ab83-3544be3b53bc"
-					},
-					"response": []
-				},
-				{
-					"name": "List Hotels",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/hotel/all?city=Nairobi&country=KENYA&page=1&limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"hotel",
-								"all"
-							],
-							"query": [
-								{
-									"key": "city",
-									"value": "Nairobi"
-								},
-								{
-									"key": "country",
-									"value": "KENYA"
-								},
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
-						}
 					},
 					"response": []
 				}
@@ -169,7 +101,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/room/available?check_in=2025-02-01&check_out=2025-02-10&hotel_id=7c751b8e-fd53-44e6-ab83-3544be3b53bc",
+									"raw": "{{base_url}}/room/available?check_in=2025-02-18&check_out=2025-02-22&hotel_id=7c751b8e-fd53-44e6-ab83-3544be3b53bc",
 									"host": [
 										"{{base_url}}"
 									],
@@ -180,11 +112,11 @@
 									"query": [
 										{
 											"key": "check_in",
-											"value": "2025-02-01"
+											"value": "2025-02-18"
 										},
 										{
 											"key": "check_out",
-											"value": "2025-02-10"
+											"value": "2025-02-22"
 										},
 										{
 											"key": "hotel_id",
@@ -200,22 +132,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": {
-									"raw": "{{base_url}}/room/all-rooms?hotel_id=7c751b8e-fd53-44e6-ab83-3544be3b53bc",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"room",
-										"all-rooms"
-									],
-									"query": [
-										{
-											"key": "hotel_id",
-											"value": "7c751b8e-fd53-44e6-ab83-3544be3b53bc"
-										}
-									]
-								}
+								"url": "{{base_url}}/room/all-rooms"
 							},
 							"response": []
 						},
@@ -224,7 +141,7 @@
 							"request": {
 								"method": "GET",
 								"header": [],
-								"url": "{{base_url}}/room/room-details/87e5270f-caee-4ed7-ab67-5e02d4ac2b00"
+								"url": "{{base_url}}/room/room-details/3a5352f9-9d5e-4b62-90d7-7d31d4a741a2"
 							},
 							"response": []
 						},
@@ -235,7 +152,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"room_number\": 120,\n    \"floor_number\": 3,\n    \"hotel_id\": \"7c751b8e-fd53-44e6-ab83-3544be3b53bc\",\n    // \"room_type_id\": \"c9bf9e57-1685-4c89-bafb-ff5af830be8a\",\n    \"room_type\": {\n        \"name\": \"one-bedroom\"\n    },\n    \"is_available\": true,\n    \"under_maintenance\": false\n}",
+									"raw": "{\n    \"room_number\": 123,\n    \"floor_number\": 3,\n    // \"room_type_id\": \"c9bf9e57-1685-4c89-bafb-ff5af830be8a\",\n    \"room_type\": {\n        \"name\": \"one-bedroom\"\n    },\n    \"is_available\": true,\n    \"under_maintenance\": false\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -269,7 +186,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    // \"room_id\": \"123e4567-e89b-12d3-a456-426614175000\",\n    \"room_number\": 103,\n    // \"check_in_date\": \"2025-02-01T00:00:00Z\",\n    // \"check_out_date\": \"2025-02-04T00:00:00Z\",\n    \"check_in_date\": \"2025-02-09\",\n    \"check_out_date\": \"2025-02-10\",\n    \"num_guests\": 2,\n    \"special_request\": \"Late check-in\",\n    \"payment_method\":\"CASH\",\n    \"payment_details\":\"N/A\"\n}",
+							"raw": "{\n    // \"room_id\": \"123e4567-e89b-12d3-a456-426614175000\",\n    \"room_number\": 120,\n    // \"check_in_date\": \"2025-02-01T00:00:00Z\",\n    // \"check_out_date\": \"2025-02-04T00:00:00Z\",\n    \"check_in_date\": \"2025-02-23\",\n    \"check_out_date\": \"2025-02-25\",\n    \"num_guests\": 1,\n    \"special_request\": \"late check-in\",\n    \"payment_method\":\"CRYPTO\",\n    \"payment_details\":\"somedetails\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -300,7 +217,7 @@
 								}
 							}
 						},
-						"url": "{{base_url}}/reservation/cancel/4f3fb717-e8ad-499a-840b-32f07fda4ca6"
+						"url": "{{base_url}}/reservation/cancel/2055f7f1-f1bd-4b4f-96b3-96e3718d64fe"
 					},
 					"response": []
 				},
@@ -324,7 +241,7 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "{{base_url}}/reservation/reservation-details/d6ec47e4-75b8-40a9-9a07-406d8563f88c"
+						"url": "{{base_url}}/reservation/reservation-details/2055f7f1-f1bd-4b4f-96b3-96e3718d64fe"
 					},
 					"response": []
 				}

@@ -6,7 +6,6 @@ import (
 )
 
 import (
-	hotelEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/hotel/entity"
 	reservationEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/entity"
 	userEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 )
@@ -20,7 +19,6 @@ func RunMigrations(db *gorm.DB) error {
 	// Auto-migrate all models
 	return db.AutoMigrate(
 		&userEntity.User{},
-		&hotelEntity.Hotel{},
 		&roomEntity.RoomType{},
 		&roomEntity.Room{},
 		&reservationEntity.Reservation{},

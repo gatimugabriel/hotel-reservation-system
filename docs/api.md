@@ -1,32 +1,42 @@
 # API Documentation
 
-## Base URL
+You can view and interact with the api here. 
 ```
-https://api.hotelreservation.gabu/v1
+https://elements.getpostman.com/redirect?entityId=24249138-a653a984-406d-47d2-b479-dd0b192444d7&entityType=collection
 ```
+
+Once accessed, just ensure sure you set the `base_url` variable to:
+
+``https://localhost:8080/api/v1`` - to interact with LOCAL application that you setup earlier
+
+``https://hrs-nexus.onrender.com/api/v1`` - to interact with hosted application
 
 ## Authentication
-API endpoints that require auth use an issued accessToken(JWT) during signin. These endpoints are marked to help you know they require auth
+Many endpoints require authentication using JWT tokens. To authenticate:
 
-```
-Authorization: Bearer <your_accessToken>
-```
+1. Register a new user account
+2. Login with your credentials
+3. Include the JWT token in subsequent requests using the Authorization header:
+   `Authorization: Bearer <your_token>`
 
-## API Endpoints
+## Endpoints
 
 ### Authentication
 
 #### Register User
 ```http
-POST /auth/register
-Content-Type: application/json
+POST /auth/signup
+```
 
+Request body:
+```json
 {
-    "email": "user@example.com",
-    "password": "securepassword",
-    "firstName": "John",
-    "lastName": "Doe",
-    "phone": "+1234567890"
+    "first_name": "James",
+    "last_name": "Bond",
+    "phone": "+1234567892",
+    "email": "guest@example.com",
+    "password": "StrongPass123!",
+    "role": "MANAGER"
 }
 ```
 
@@ -34,23 +44,28 @@ Response:
 ```json
 {
     "status": "success",
+    "message": "User registered successfully",
     "data": {
-        "userId": "uuid-here",
-        "email": "user@example.com",
-        "firstName": "John",
-        "lastName": "Doe"
+        "id": "uuid",
+        "first_name": "James",
+        "last_name": "Bond",
+        "email": "guest@example.com",
+        "phone": "+1234567892",
+        "role": "MANAGER"
     }
 }
 ```
 
 #### Login
 ```http
-POST /auth/login
-Content-Type: application/json
+POST /auth/signin
+```
 
+Request body:
+```json
 {
-    "email": "user@example.com",
-    "password": "securepassword"
+    "email": "guest@example.com",
+    "password": "StrongPass123!"
 }
 ```
 
@@ -58,122 +73,171 @@ Response:
 ```json
 {
     "status": "success",
+    "message": "Login successful",
     "data": {
-        "token": "jwt-token-here",
-        "expiresIn": 3600
+        "access_token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "user": {
+            "id": "uuid",
+            "email": "guest@example.com",
+            "role": "MANAGER"
+        }
     }
 }
 ```
 
 ### Room Management
 
-#### Get Available Rooms
+#### Room Types
+
+##### Create Room Type (Requires ADMIN/MANAGER Role)
 ```http
-GET /rooms/available?checkIn=2024-01-01&checkOut=2024-01-05
+POST /room/create-type
 ```
 
-Response:
+Request body:
 ```json
 {
-    "status": "success",
-    "data": {
-        "rooms": [
-            {
-                "id": "room-uuid",
-                "type": "DOUBLE",
-                "number": "201",
-                "price": 150.00,
-                "amenities": ["TV", "AC", "WiFi"],
-                "maxOccupancy": 2
-            }
-        ]
-    }
+    "name": "one-bedroom",
+    "description": "One bedroom bnbs",
+    "price_per_night": 199.99
 }
 ```
 
-#### Create Booking
+##### List All Room Types
 ```http
-POST /bookings
-Content-Type: application/json
-
-{
-    "roomId": "room-uuid",
-    "checkIn": "2024-01-01",
-    "checkOut": "2024-01-05",
-    "guests": [
-        {
-            "firstName": "John",
-            "lastName": "Doe",
-            "email": "john@example.com"
-        }
-    ],
-    "paymentDetails": {
-        "cardNumber": "4111111111111111",
-        "expiryMonth": "12",
-        "expiryYear": "2025",
-        "cvv": "123"
-    }
-}
+GET /room/type/all
 ```
 
-Response:
+##### Get Room Type Details
+```http
+GET /room/type-details/{type_id}
+```
+
+#### Rooms
+
+##### Search Available Rooms
+```http
+GET /room/available?check_in=2025-02-18&check_out=2025-02-22
+```
+
+Query Parameters:
+- `check_in`: Check-in date (YYYY-MM-DD)
+- `check_out`: Check-out date (YYYY-MM-DD)
+
+##### Create Room (Requires ADMIN Role)
+```http
+POST /room/create-room
+```
+
+Request body:
 ```json
 {
-    "status": "success",
-    "data": {
-        "bookingId": "booking-uuid",
-        "totalAmount": 600.00,
-        "status": "CONFIRMED",
-        "checkIn": "2024-01-01",
-        "checkOut": "2024-01-05"
-    }
+    "room_number": 123,
+    "floor_number": 3,
+    "room_type_id": "uuid"
 }
 ```
 
-### Error Responses
+##### List All Rooms
+```http
+GET /room/all-rooms
+```
 
-#### 400 Bad Request
+##### Get Room Details
+```http
+GET /room/room-details/{room_id}
+```
+
+### Reservations
+
+#### Create Reservation
+```http
+POST /reservation/create-reservation
+```
+
+Request body:
+```json
+{
+    "room_id": "uuid",
+    "check_in_date": "2025-02-18",
+    "check_out_date": "2025-02-22"
+}
+```
+
+#### Cancel Reservation
+```http
+PATCH /reservation/cancel/{reservation_id}
+```
+
+Request body: none
+```
+
+#### List User Reservations
+```http
+GET /reservation/me
+```
+
+#### Get Reservation Details
+```http
+GET /reservation/reservation-details/{reservation_id}
+```
+
+### Payments
+
+#### Create Payment
+```http
+POST /payments
+```
+
+Request body:
+```json
+{
+    "reservation_id": "uuid",
+    "payment_method": "CREDIT_CARD",
+    "amount": 499.99
+}
+```
+
+Authorization: Bearer Token required
+
+#### Get Payment Details
+```http
+GET /payments/{payment_id}
+```
+
+Authorization: Bearer Token required
+
+## Error Responses
+
+### 400 Bad Request
 ```json
 {
     "status": "error",
-    "error": {
-        "code": "INVALID_INPUT",
-        "message": "Invalid date format for check-in"
-    }
+    "message": "Invalid input data",
+    "errors": ["Specific validation errors"]
 }
 ```
 
-#### 401 Unauthorized
+### 401 Unauthorized
 ```json
 {
     "status": "error",
-    "error": {
-        "code": "UNAUTHORIZED",
-        "message": "Invalid or expired token"
-    }
+    "message": "Authentication required"
 }
 ```
 
-#### 404 Not Found
+### 403 Forbidden
 ```json
 {
     "status": "error",
-    "error": {
-        "code": "NOT_FOUND",
-        "message": "Room not found"
-    }
+    "message": "Insufficient permissions"
 }
 ```
 
-## Rate Limiting
-API requests are limited to 100 requests per minute per IP address.
-
-## Pagination
-For endpoints that return lists, pagination is supported using the following query parameters:
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10, max: 100)
-
-Example:
-```http
-GET /reservations?page=2&limit=20
+### 404 Not Found
+```json
+{
+    "status": "error",
+    "message": "Resource not found"
+}
 ```

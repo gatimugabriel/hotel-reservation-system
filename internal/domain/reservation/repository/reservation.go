@@ -34,11 +34,10 @@ func NewReservationRepository(db *database.Service) *ReservationRepositoryImpl {
 func (repo *ReservationRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID) (*entity.Reservation, error) {
 	var reservation entity.Reservation
 	if err := repo.db.WithContext(ctx).
+		Preload("User").
 		Preload("Payment").
-		Preload("Room.Hotel").
 		Preload("Room").
 		Preload("Room.RoomType").
-		Preload("User").
 		Where("id = ?", id).First(&reservation).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("reservation not found")
@@ -51,10 +50,10 @@ func (repo *ReservationRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID
 func (repo *ReservationRepositoryImpl) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*entity.Reservation, error) {
 	var reservations []*entity.Reservation
 	if err := repo.db.WithContext(ctx).
-		Preload("Room").
 		Preload("User").
+		Preload("Payment").
+		Preload("Room").
 		Preload("Room.RoomType").
-		Preload("Room.Hotel").
 		Where("user_id = ?", userID).Find(&reservations).Error; err != nil {
 		return nil, fmt.Errorf("failed to get reservations by user ID: %w", err)
 	}
@@ -63,7 +62,12 @@ func (repo *ReservationRepositoryImpl) GetByUserID(ctx context.Context, userID u
 
 func (repo *ReservationRepositoryImpl) GetByRoomID(ctx context.Context, roomID uuid.UUID) ([]*entity.Reservation, error) {
 	var reservations []*entity.Reservation
-	if err := repo.db.WithContext(ctx).Where("room_id = ?", roomID).Find(&reservations).Error; err != nil {
+	if err := repo.db.WithContext(ctx).
+		Preload("User").
+		Preload("Payment").
+		Preload("Room").
+		Preload("Room.RoomType").
+		Where("room_id = ?", roomID).Find(&reservations).Error; err != nil {
 		return nil, fmt.Errorf("failed to get reservations by room ID: %w", err)
 	}
 	return reservations, nil
@@ -71,12 +75,15 @@ func (repo *ReservationRepositoryImpl) GetByRoomID(ctx context.Context, roomID u
 
 func (repo *ReservationRepositoryImpl) GetByDateRange(ctx context.Context, checkIn, checkOut time.Time) ([]*entity.Reservation, error) {
 	var reservations []*entity.Reservation
-	if err := repo.db.DB.WithContext(ctx).
-		Where("(check_in_date BETWEEN ? AND ?) OR (check_out_date BETWEEN ? AND ?)",
-			checkIn, checkOut, checkIn, checkOut).
-		Find(&reservations).Error; err != nil {
+
+	err := repo.db.WithContext(ctx).
+		Where("(check_in_date BETWEEN ? AND ?) OR (check_out_date BETWEEN ? AND ?)", checkIn, checkOut, checkIn, checkOut).
+		Find(&reservations).Error
+
+	if err != nil {
 		return nil, fmt.Errorf("failed to get reservations by date range: %w", err)
 	}
+
 	return reservations, nil
 }
 

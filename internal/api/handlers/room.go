@@ -23,16 +23,7 @@ func NewRoomHandler(roomService services.RoomService, roomTypeService services.R
 }
 
 func (h *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
-	hotelID := r.URL.Query().Get("hotel_id")
-	id, err := uuid.Parse(hotelID)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid hotel ID")
-		return
-	}
-
-	filters := map[string]interface{}{
-		"hotel_id": id,
-	}
+	filters := map[string]interface{}{} //none
 
 	rooms, err := h.roomService.GetRooms(r.Context(), filters)
 	if err != nil {
@@ -63,16 +54,13 @@ func (h *RoomHandler) GetAvailableRooms(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	hotelIDStr := utils.GetParamFromURL(r, "hotel_id")
-	hotelID, err := uuid.Parse(hotelIDStr)
-
-	categorizedRooms, err := h.roomService.CheckAvailability(r.Context(), hotelID, checkinDate, checkoutDate)
+	categorizedRooms, err := h.roomService.CheckAvailability(r.Context(), checkinDate, checkoutDate)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to get available rooms:"+err.Error())
 		return
 	}
 	if categorizedRooms == nil {
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to get available rooms: "+err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, "No available rooms")
 		return
 	}
 
@@ -105,7 +93,7 @@ func (h *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// default
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to create room:"+err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
