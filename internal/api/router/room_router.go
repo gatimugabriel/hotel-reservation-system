@@ -2,12 +2,12 @@ package router
 
 import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/handlers"
-	"github.com/gatimugabriel/hotel-reservation-system/internal/api/middleware"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	reservationRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/services"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/infrastructure/database"
+	middleware2 "github.com/gatimugabriel/hotel-reservation-system/internal/middleware"
 	"net/http"
 )
 
@@ -25,17 +25,19 @@ func RegisterRoomRoutes(db *database.Service, r *http.ServeMux) http.Handler {
 	handler := handlers.NewRoomHandler(roomService, roomTypeService)
 
 	allowedCreationRoles := []constants.Role{constants.MANAGER, constants.PROPERTYOWNER, constants.ADMIN}
-	roleCheckMiddleware := middleware.AuthWithRoleCheck(allowedCreationRoles)
+	roleCheckMiddleware := middleware2.AuthWithRoleCheck(allowedCreationRoles)
 	// apply to many handlers
-	adminHandlers := middleware.ApplyMiddlewareToMany(
+	adminHandlers := middleware2.ApplyMiddlewareToMany(
 		roleCheckMiddleware,
 		handler.CreateRoom,
 		handler.CreateRoomType,
+		handler.CreateBedType,
 	)
 
 	//___Privileged routes ___//
 	r.Handle("POST /create-room", adminHandlers[0])
 	r.Handle("POST /create-type", adminHandlers[1])
+	r.Handle("POST /create-bedtype", adminHandlers[2]) //bed types
 
 	//r.Handle("POST /create-room",
 	//	middleware.Authenticate(

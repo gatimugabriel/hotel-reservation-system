@@ -1,8 +1,8 @@
 package httpServer
 
 import (
-	"github.com/gatimugabriel/hotel-reservation-system/internal/api/middleware"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/config"
+	middleware2 "github.com/gatimugabriel/hotel-reservation-system/internal/middleware"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/cors"
 	"log"
@@ -14,11 +14,11 @@ func StartServer(configurations *config.Config, router *http.ServeMux) {
 
 	//____ apply global middlewares ____//
 	// 1. rate limiter
-	rateLimiter := middleware.NewIPRateLimiter(5, 10)
-	limitedRouter := middleware.Limit(rateLimiter)(router)
+	rateLimiter := middleware2.NewIPRateLimiter(5, 10)
+	limitedRouter := middleware2.Limit(rateLimiter)(router)
 
 	//	2.Request Logger
-	wrappedRouter := middleware.RequestLogger(limitedRouter)
+	wrappedRouter := middleware2.RequestLogger(limitedRouter)
 
 	//____ CORS Setup ____//
 	corsHandler := cors.New(cors.Options{

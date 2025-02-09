@@ -19,6 +19,8 @@ type RoomTypeRepository interface {
 	Create(ctx context.Context, roomType *entity.RoomType) error
 	Update(ctx context.Context, roomType *entity.RoomType) error
 	Delete(ctx context.Context, id uuid.UUID) error
+
+	CreateBed(ctx context.Context, bedType *entity.BedType) error
 }
 
 // RoomTypeRepositoryImpl implements the RoomTypeRepository interface
@@ -96,4 +98,10 @@ func (repo *RoomTypeRepositoryImpl) GetAll(ctx context.Context) ([]*entity.RoomT
 		return nil, err
 	}
 	return roomTypes, nil
+}
+
+func (repo *RoomTypeRepositoryImpl) CreateBed(ctx context.Context, bt *entity.BedType) error {
+	return repo.db.Transaction(ctx, func(tx *gorm.DB) error {
+		return tx.Create(bt).Error
+	})
 }

@@ -12,6 +12,8 @@ type RoomTypeService interface {
 	GetRoomType(ctx context.Context, id uuid.UUID) (*entity.RoomType, error)
 	ListRoomTypes(ctx context.Context) ([]*entity.RoomType, error)
 	UpdateRoomType(ctx context.Context, roomType *entity.RoomType) (*entity.RoomType, error)
+
+	CreateBedType(ctx context.Context, roomType *entity.BedType) (*entity.BedType, error)
 }
 
 type RoomTypeServiceImpl struct {
@@ -38,6 +40,14 @@ func (r RoomTypeServiceImpl) UpdateRoomType(ctx context.Context, roomType *entit
 		return nil, err
 	}
 	return roomType, nil
+}
+
+// Bed
+func (r RoomTypeServiceImpl) CreateBedType(ctx context.Context, bedType *entity.BedType) (*entity.BedType, error) {
+	if err := r.repo.CreateBed(ctx, bedType); err != nil {
+		return nil, err
+	}
+	return bedType, nil
 }
 
 func NewRoomTypeService(roomTypeRepo repository.RoomTypeRepository) *RoomTypeServiceImpl {

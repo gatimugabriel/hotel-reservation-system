@@ -2,12 +2,12 @@ package router
 
 import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/api/handlers"
-	"github.com/gatimugabriel/hotel-reservation-system/internal/api/middleware"
 	paymentRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/payment/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/reservation/services"
 	roomRepository "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/infrastructure/database"
+	"github.com/gatimugabriel/hotel-reservation-system/internal/middleware"
 	"net/http"
 )
 

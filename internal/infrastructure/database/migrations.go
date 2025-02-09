@@ -19,6 +19,7 @@ func RunMigrations(db *gorm.DB) error {
 	// Auto-migrate all models
 	return db.AutoMigrate(
 		&userEntity.User{},
+		&roomEntity.BedType{},
 		&roomEntity.RoomType{},
 		&roomEntity.Room{},
 		&reservationEntity.Reservation{},

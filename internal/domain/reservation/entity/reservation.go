@@ -6,7 +6,6 @@ import (
 	roomEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	userEntity "github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"time"
 )
 
@@ -40,9 +39,8 @@ type Reservation struct {
 	PaymentID uuid.UUID             `gorm:"type:uuid;index" json:"payment_id"`
 	Payment   paymentEntity.Payment `gorm:"foreignKey:PaymentID;references:ID" json:"payment,omitempty"`
 
-	CreatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
 // CreateReservationRequest represents the data object used when user need to create a reservation

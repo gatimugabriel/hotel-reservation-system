@@ -7,7 +7,6 @@ import (
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/room/repository"
 	"github.com/google/uuid"
-	"log"
 	"time"
 )
 
@@ -35,30 +34,11 @@ func NewRoomService(roomRepo repository.RoomRepository, roomTypeRepo repository.
 	}
 }
 
-//func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
-//	rooms, err := r.roomRepo.GetAvailableRooms(ctx, checkIn)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to get available rooms: %w", err)
-//	}
-//
-//	// Categorize rooms by their type
-//	categorizedRooms := make(map[string][]*entity.Room)
-//	for _, room := range rooms {
-//		roomType := room.RoomType.Name
-//		categorizedRooms[roomType] = append(categorizedRooms[roomType], room)
-//	}
-//
-//	return categorizedRooms, nil
-//}
-
 func (r *RoomServiceImpl) CheckAvailability(ctx context.Context, checkIn, checkOut time.Time) (map[string][]*entity.Room, error) {
-	// Fetch all rooms that are not under maintenance
-	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"under_maintenance": false})
+	rooms, err := r.roomRepo.GetRooms(ctx, map[string]interface{}{"status": "available"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rooms: %w", err)
 	}
-
-	log.Println("rooms under no maintenance count", len(rooms))
 
 	// Fetch reservations that overlap with the given date range
 	reservations, err := r.reservationRepo.GetByDateRange(ctx, checkIn, checkOut)

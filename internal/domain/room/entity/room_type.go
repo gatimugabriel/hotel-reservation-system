@@ -2,7 +2,6 @@ package entity
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"time"
 )
 
@@ -14,10 +13,12 @@ type RoomType struct {
 	BasePrice    float64   `gorm:"type:decimal(10,2);not null" json:"base_price" validate:"required,min=0"`
 	MaxOccupancy int       `gorm:"not null" json:"max_occupancy" validate:"required,min=1,max=10"`
 	NumBeds      int       `gorm:"not null" json:"num_beds" validate:"required,min=1,max=5"`
-	BedType      string    `gorm:"type:citext;not null" json:"bed_type" validate:"required,oneof=SINGLE DOUBLE QUEEN KING"`
 	SquareMeters float64   `gorm:"type:decimal(6,2);not null" json:"square_meters" validate:"required,min=1"`
+	Status       string    `gorm:"type:citext;not null;default:'ACTIVE'" json:"status" validate:"oneof=ACTIVE INACTIVE"`
 
-	CreatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	BedTypeID uuid.UUID `gorm:"type:uuid;not null;index" json:"bed_type_id" validate:"required"`
+	Bed       BedType   `gorm:"foreignKey:BedTypeID" json:"bed_type"`
+
+	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
 }

@@ -9,3 +9,11 @@ const (
 	STAFF         Role = "STAFF"
 	GUEST         Role = "GUEST"
 )
+
+type UserStatus string
+
+const (
+	ACTIVE   UserStatus = "ACTIVE"
+	INACTIVE UserStatus = "INACTIVE"
+	DELETED  UserStatus = "DELETED"
+)

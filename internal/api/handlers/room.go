@@ -158,3 +158,31 @@ func (h *RoomHandler) ListRoomTypes(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, roomTypes)
 }
+
+// CreateBedType creates a new bed type
+func (h *RoomHandler) CreateBedType(w http.ResponseWriter, r *http.Request) {
+	var bedType entity.BedType
+	if err := json.NewDecoder(r.Body).Decode(&bedType); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	//Sanitize & ValidateStruct
+	if validationErrors := input.ValidateStruct(bedType); validationErrors != nil {
+		utils.RespondJSON(w, http.StatusBadRequest, validationErrors)
+		return
+	}
+
+	createdBedType, err := h.roomTypeService.CreateBedType(r.Context(), &bedType)
+	if err != nil {
+		if status, message, ok := utils.HandleUniqueConstraintError(err); ok {
+			utils.RespondError(w, status, message)
+			return
+		}
+		// default
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to create bed type:"+err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusCreated, createdBedType)
+}

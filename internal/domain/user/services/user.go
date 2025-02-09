@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/config"
-	"github.com/gatimugabriel/hotel-reservation-system/internal/constants"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/entity"
 	"github.com/gatimugabriel/hotel-reservation-system/internal/domain/user/repository"
 	"github.com/gatimugabriel/hotel-reservation-system/pkg/utils"
@@ -16,11 +15,9 @@ import (
 
 // UserService : interface for user business logic
 type UserService interface {
-	Create(ctx context.Context, req *entity.User) (*entity.User, error)
-	CreateOrGetWithGoogleOauth(ctx context.Context, token *oauth2.Token) (*entity.User, error)
-
 	Authenticate(ctx context.Context, req *entity.UserLoginRequest) (string, string, error)
 
+	Create(ctx context.Context, req *entity.User) (*entity.User, error)
 	GetUser(ctx context.Context, userID string) (*entity.User, error)
 	UpdateProfile(ctx context.Context, userID string, user *entity.User) (*entity.User, error)
 	DeactivateAccount(id uuid.UUID) error
@@ -53,32 +50,6 @@ func (u *UserServiceImpl) Create(ctx context.Context, user *entity.User) (*entit
 	}
 
 	return user, nil
-}
-
-func (u *UserServiceImpl) CreateOrGetWithGoogleOauth(ctx context.Context, token *oauth2.Token) (*entity.User, error) {
-	// Get user info from Google
-	userInfo, err := u.getGoogleUserInfo(token.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if user exists
-	existingUser, err := u.userRepo.GetByEmail(ctx, userInfo.Email)
-	if err == nil {
-		return existingUser, nil
-	}
-
-	// Create new user
-	newUser := &entity.User{
-		Email:      userInfo.Email,
-		FirstName:  userInfo.GivenName,
-		LastName:   userInfo.FamilyName,
-		Role:       constants.GUEST,
-		IsActive:   true,
-		IsVerified: true,
-	}
-
-	return u.Create(ctx, newUser)
 }
 
 func (u *UserServiceImpl) Authenticate(ctx context.Context, req *entity.UserLoginRequest) (string, string, error) {
@@ -135,7 +106,7 @@ func (u *UserServiceImpl) DeactivateAccount(id uuid.UUID) error {
 		return err
 	}
 
-	user.IsActive = false
+	user.Status = "INACTIVE"
 	user.UpdatedAt = time.Now()
 
 	return u.userRepo.Update(context.Background(), user)
@@ -148,21 +119,4 @@ func (u *UserServiceImpl) DeleteUser(ctx context.Context, userID string) error {
 	}
 
 	return u.userRepo.Delete(ctx, id)
-}
-
-//func (u *UserServiceImpl) GetUsers(ctx context.Context) ([]*entity.User, error) {
-//	// TODO: Implement pagination
-//	return u.userRepo.GetAll(ctx)
-//}
-
-// Helper method to get Google user info
-func (u *UserServiceImpl) getGoogleUserInfo(accessToken string) (*GoogleUserInfo, error) {
-	// Implementation to call Google OAuth2 userinfo endpoint
-	return nil, nil
-}
-
-type GoogleUserInfo struct {
-	Email      string `json:"email"`
-	GivenName  string `json:"given_name"`
-	FamilyName string `json:"family_name"`
 }

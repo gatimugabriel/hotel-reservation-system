@@ -135,8 +135,8 @@ func (r *ReservationServiceImpl) ValidateReservation(ctx context.Context, reserv
 	}
 
 	room := rooms[0]
-	if room.UnderMaintenance {
-		return fmt.Errorf("room has been marked under maintenance")
+	if room.Status == "under_maintenance" {
+		return fmt.Errorf("room is under maintenance")
 	}
 
 	return nil
